@@ -21,6 +21,6 @@ with DAG('rudderstack-sample',
     start_date=datetime(2021, 1, 1),
     catchup=False,
     tags=['rs']) as dag:
-    rs_operator = RudderstackOperator(source_id='20dQV6yuUDUw31peWA8f7xxgHdN', task_id='rs_trigger_sync')
+    rs_operator = RudderstackOperator(source_id='<source-id>', task_id='<any-task-id>')
     
     rs_operator
