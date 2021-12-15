@@ -22,5 +22,3 @@ with DAG('rudderstack-sample',
     catchup=False,
     tags=['rs']) as dag:
     rs_operator = RudderstackOperator(source_id='<source-id>', task_id='<any-task-id>')
-    
-    rs_operator
