@@ -22,7 +22,7 @@ pip install rudderstack-airflow-provider
 
 # Usage
 
-A simple DAG for triggering sync for rudderstack source. refer [example](examples/sample_dag.py)
+A simple DAG for triggering sync for rudderstack source. for complete code, refer [example](examples/sample_dag.py)
 
 ```python
 with DAG('rudderstack-sample',
