@@ -1,4 +1,3 @@
-from datetime import timedelta
 import logging
 
 import requests
@@ -32,5 +31,3 @@ class RudderstackOperator(baseoperator.BaseOperator):
         rs_hook.trigger_sync()
         if self.wait_for_completion:
             rs_hook.poll_for_status()
-
-        return
