@@ -43,7 +43,7 @@ with DAG('rudderstack-sample',
 | wait_for_completion | if true task will wait for sync to complete                 | boolean | False               |
 | connection_id       | airflow connection to use for connecting to rudderstack api | string  | rudderstack_default |
 
-rudderstack operator supports all the parameters supported by [airflow base operator][https://airflow.apache.org/docs/apache-airflow/stable/_api/airflow/models/baseoperator/index.html]
+Rudderstack operator supports all the parameters supported by [airflow base operator](https://airflow.apache.org/docs/apache-airflow/stable/_api/airflow/models/baseoperator/index.html)
 
 # License
 
