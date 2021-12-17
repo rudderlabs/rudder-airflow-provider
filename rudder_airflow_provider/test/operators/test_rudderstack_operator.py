@@ -23,7 +23,7 @@ class TestRudderstackOperator(unittest.TestCase):
         mock_poll_status: mock.Mock):
         mock_hook_sync.return_value = None
         mock_poll_status.return_value = None
-        operator = RudderstackOperator(source_id='some-source-id', 
+        operator = RudderstackOperator(source_id='some-source-id',
             wait_for_completion=True, task_id='some-task-id')
         operator.execute(context=None)
         mock_hook_sync.assert_called_once()
