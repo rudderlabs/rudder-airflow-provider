@@ -32,7 +32,7 @@ class RudderstackHook(HttpHook):
                      self.source_id, sync_endpoint)
         resp = self.run(endpoint=sync_endpoint, headers={
                 'authorization': f"Bearer {access_token}"}, extra_options={"check_response": False})
-        if resp.status_code == 204:
+        if resp.status_code in (200, 204, 201):
             logging.info('Job triggered for sourceId: %s', self.source_id)
         elif resp.status_code == 409:
             logging.info('Job is already running for sourceId: %s', self.source_id)

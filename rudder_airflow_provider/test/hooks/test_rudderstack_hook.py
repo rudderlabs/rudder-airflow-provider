@@ -24,10 +24,42 @@ class RudderstackHookTest(unittest.TestCase):
         hook = RudderstackHook('rudderstack_connection', source_id)
         mock_connection.return_value = Connection(password=access_token)
         sync_endpoint = f"/v2/sources/{source_id}/start"
-        mock_run.return_value = Response()
+        start_resp = Response()
+        start_resp.status_code = 204
+        mock_run.return_value = start_resp
         hook.trigger_sync()
         mock_run.assert_called_once_with(endpoint=sync_endpoint, headers={
-                 'authorization': f"Bearer {access_token}"})
+                 'authorization': f"Bearer {access_token}"}, extra_options={'check_response': False})
+    
+    @mock.patch('rudder_airflow_provider.hooks.rudderstack.HttpHook.get_connection')
+    @mock.patch('rudder_airflow_provider.hooks.rudderstack.HttpHook.run')
+    def test_trigger_sync_conflict_status(self, mock_run: mock.Mock, mock_connection: mock.Mock):
+        source_id = 'some-source-id'
+        access_token = 'some-password'
+        hook = RudderstackHook('rudderstack_connection', source_id)
+        mock_connection.return_value = Connection(password=access_token)
+        sync_endpoint = f"/v2/sources/{source_id}/start"
+        start_resp = Response()
+        start_resp.status_code = 409
+        mock_run.return_value = start_resp
+        hook.trigger_sync()
+        mock_run.assert_called_once_with(endpoint=sync_endpoint, headers={
+                 'authorization': f"Bearer {access_token}"}, extra_options={'check_response': False})
+    
+    @mock.patch('rudder_airflow_provider.hooks.rudderstack.HttpHook.get_connection')
+    @mock.patch('rudder_airflow_provider.hooks.rudderstack.HttpHook.run')
+    def test_trigger_sync_error_status(self, mock_run: mock.Mock, mock_connection: mock.Mock):
+        source_id = 'some-source-id'
+        access_token = 'some-password'
+        hook = RudderstackHook('rudderstack_connection', source_id)
+        mock_connection.return_value = Connection(password=access_token)
+        sync_endpoint = f"/v2/sources/{source_id}/start"
+        start_resp = Response()
+        start_resp.status_code = 500
+        mock_run.return_value = start_resp
+        self.assertRaises(AirflowException, hook.trigger_sync)
+        mock_run.assert_called_once_with(endpoint=sync_endpoint, headers={
+                 'authorization': f"Bearer {access_token}"}, extra_options={'check_response': False})
 
     @mock.patch('rudder_airflow_provider.hooks.rudderstack.HttpHook.get_connection')
     @mock.patch('rudder_airflow_provider.hooks.rudderstack.HttpHook.run')
