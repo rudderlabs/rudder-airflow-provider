@@ -34,7 +34,7 @@ class RudderstackHook(HttpHook):
                 'authorization': f"Bearer {access_token}"}, extra_options={"check_response": False})
         if resp.status_code == 204:
             logging.info('Job triggered for sourceId: %s', self.source_id)
-        if resp.status_code == 409:
+        elif resp.status_code == 409:
             logging.info('Job is already running for sourceId: %s', self.source_id)
         else:
             raise AirflowException(f"Error while starting sync for sourceId: {self.source_id}, response: {resp.status_code}")
