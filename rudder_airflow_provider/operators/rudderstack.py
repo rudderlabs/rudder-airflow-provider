@@ -1,6 +1,3 @@
-import logging
-
-import requests
 from airflow.models import baseoperator
 from rudder_airflow_provider.hooks.rudderstack import RudderstackHook
 

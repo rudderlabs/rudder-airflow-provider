@@ -3,6 +3,7 @@ import time
 
 from airflow.exceptions import AirflowException
 from airflow.providers.http.hooks.http import HttpHook
+from requests.models import Response
 
 STATUS_FINISHED = 'finished'
 STATUS_POLL_INTERVAL = 10
@@ -29,8 +30,14 @@ class RudderstackHook(HttpHook):
         access_token = self.get_access_token()
         logging.info('triggering sync for sourceId: %s, endpoint: %s',
                      self.source_id, sync_endpoint)
-        self.run(endpoint=sync_endpoint, headers={
-                 'authorization': f"Bearer {access_token}"})
+        resp = self.run(endpoint=sync_endpoint, headers={
+                'authorization': f"Bearer {access_token}"}, extra_options={"check_response": False})
+        if resp.status_code == 204:
+            logging.info('Job triggered for sourceId: %s', self.source_id)
+        if resp.status_code == 409:
+            logging.info('Job is already running for sourceId: %s', self.source_id)
+        else:
+            raise AirflowException(f"Error while starting sync for sourceId: {self.source_id}, response: {resp.status_code}")
 
     def poll_for_status(self):
         '''
