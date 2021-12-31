@@ -22,7 +22,7 @@ pip install rudderstack-airflow-provider
 
 # Usage
 
-A simple DAG for triggering sync for rudderstack source. for complete code, refer [example](examples/sample_dag.py)
+A simple DAG for triggering sync for rudderstack source. For complete code, refer [example](examples/sample_dag.py)
 
 ```python
 with DAG('rudderstack-sample',
@@ -32,7 +32,7 @@ with DAG('rudderstack-sample',
     start_date=datetime(2021, 1, 1),
     catchup=False,
     tags=['rs']) as dag:
-    rs_operator = RudderstackOperator(source_id='<source-id>', task_id='<any-task-id>')
+    rs_operator = RudderstackOperator(source_id='<source-id>', task_id='<any-task-id>', connection_id='rudderstack_conn')
 ```
 **Operator Params**
 
@@ -44,6 +44,8 @@ with DAG('rudderstack-sample',
 | connection_id       | airflow connection to use for connecting to rudderstack api | string  | rudderstack_default |
 
 Rudderstack operator supports all the parameters supported by [airflow base operator](https://airflow.apache.org/docs/apache-airflow/stable/_api/airflow/models/baseoperator/index.html)
+
+For more detailed guide on how to run the DAG in airflow, refer to this [guide](https://rudderstack.com/docs/warehouse-actions/airflow-provider)
 
 # License
 
