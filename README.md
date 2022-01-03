@@ -4,28 +4,52 @@
 <br/>
 
 
-# \*\* Repo Name \*\*
-
-\*\* Repo description \*\*
-|:------|
+# rudder-airflow-provider
+Apache airflow provider for rudderstack. 
 
 > Questions? Start a conversation on our [**Slack channel**][slack].
 
-# Why Use \*\* Software Name \*\*
+# Why Use rudder-airflow-provider
 
-\*\* Describe what the software does. \*\*
+Trigger wh-action or cloud extract syncs for rudderstack from apache airflow.
 
-# Key Features
 
-\*\* Describe the key features, if necessary. \*\*
+# Installation
 
-# Get Started
+```bash
+pip install rudderstack-airflow-provider
+```
 
-\*\* Describe how to use the software. \*\*
+# Usage
+
+A simple DAG for triggering sync for rudderstack source. For complete code, refer [example](examples/sample_dag.py)
+
+```python
+with DAG('rudderstack-sample',
+    default_args=default_args,
+    description='A simple tutorial DAG',
+    schedule_interval=timedelta(days=1),
+    start_date=datetime(2021, 1, 1),
+    catchup=False,
+    tags=['rs']) as dag:
+    rs_operator = RudderstackOperator(source_id='<source-id>', task_id='<any-task-id>', connection_id='rudderstack_conn')
+```
+**Operator Params**
+
+| parameter           | description                                                 | type    | default             |
+|---------------------|-------------------------------------------------------------|---------|---------------------|
+| source_id           | valid rudderstack source id                                 | string  | None                |
+| task_id             | a unique task id within a dag                               | string  | None                |
+| wait_for_completion | if true task will wait for sync to complete                 | boolean | False               |
+| connection_id       | airflow connection to use for connecting to rudderstack api | string  | rudderstack_default |
+
+Rudderstack operator supports all the parameters supported by [airflow base operator](https://airflow.apache.org/docs/apache-airflow/stable/_api/airflow/models/baseoperator/index.html)
+
+For more detailed guide on how to run the DAG in airflow, refer to this [guide](https://rudderstack.com/docs/warehouse-actions/airflow-provider)
 
 # License
 
-The RudderStack \*\* software name \*\* is released under the [**MIT License**][mit_license].
+The rudderstack-airflow-provider is released under the [**MIT License**][mit_license].
 
 # Contribute
 
