@@ -1,28 +1,36 @@
 <p align="center"><a href="https://rudderstack.com"><img src="https://user-images.githubusercontent.com/59817155/126267034-ae9870b7-9137-4f45-be65-d621b055a972.png" alt="RudderStack - Customer Data Platform for Developers" height="50"/></a></p>
 <h1 align="center"></h1>
-<p align="center"><b>Customer Data Platform for Developers</b></p>
+<p align="center"><b>The Customer Data Platform for Developers</b></p>
 <br/>
 
+<p align="center">
+  <b>
+    <a href="https://rudderstack.com">Website</a>
+    ·
+    <a href="https://rudderstack.com/docs/warehouse-actions/airflow-provider/">Documentation</a>
+    ·
+    <a href="https://rudderstack.com/join-rudderstack-slack-community">Community Slack</a>
+  </b>
+</p>
 
-# rudder-airflow-provider
-Apache airflow provider for rudderstack. 
 
-> Questions? Start a conversation on our [**Slack channel**][slack].
+# RudderStack Airflow Provider
 
-# Why Use rudder-airflow-provider
-
-Trigger wh-action or cloud extract syncs for rudderstack from apache airflow.
+RudderStack's Airflow Provider lets you schedule and trigger your [**Warehouse Actions**](https://rudderstack.com/docs/warehouse-actions/) syncs from outside RudderStack and integrate them with your existing Airflow workflows.
 
 
-# Installation
+| Refer to our detailed technical [**documentation**](https://rudderstack.com/docs/warehouse-actions/airflow-provider/) for more information on this feature. If you have any questions, you can start a conversation on our [**Slack channel**][slack]. |
+| :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+
+## Installation
 
 ```bash
 pip install rudderstack-airflow-provider
 ```
 
-# Usage
+## Usage
 
-A simple DAG for triggering sync for rudderstack source. For complete code, refer [example](examples/sample_dag.py)
+A simple DAG for triggering sync for the RudderStack source. For the complete code, refer to this [**example**](examples/sample_dag.py).
 
 ```python
 with DAG('rudderstack-sample',
@@ -34,38 +42,30 @@ with DAG('rudderstack-sample',
     tags=['rs']) as dag:
     rs_operator = RudderstackOperator(source_id='<source-id>', task_id='<any-task-id>', connection_id='rudderstack_conn')
 ```
-**Operator Params**
+### Operator parameters
 
-| parameter           | description                                                 | type    | default             |
-|---------------------|-------------------------------------------------------------|---------|---------------------|
-| source_id           | valid rudderstack source id                                 | string  | None                |
-| task_id             | a unique task id within a dag                               | string  | None                |
-| wait_for_completion | if true task will wait for sync to complete                 | boolean | False               |
-| connection_id       | airflow connection to use for connecting to rudderstack api | string  | rudderstack_default |
+| Parameter             | Description                                                          | Type    | Default               |
+|:----------------------|:-------------------------------------------------------------------- |:--------|:----------------------|
+| `source_id`           | Valid RudderStack source ID                                          | String  | None                  |
+| `task_id`             | A unique task ID within a DAG                                        | String  | None                  |
+| `wait_for_completion` | If `True`, the task will wait for sync to complete.                  | Boolean | False                 |
+| `connection_id`       | The Airflow connection to use for connecting to the Rudderstack API. | String  | `rudderstack_default` |
 
-Rudderstack operator supports all the parameters supported by [airflow base operator](https://airflow.apache.org/docs/apache-airflow/stable/_api/airflow/models/baseoperator/index.html)
+The RudderStack operator supports all the parameters supported by the [**Airflow base operator**](https://airflow.apache.org/docs/apache-airflow/stable/_api/airflow/models/baseoperator/index.html).
 
-For more detailed guide on how to run the DAG in airflow, refer to this [guide](https://rudderstack.com/docs/warehouse-actions/airflow-provider)
+For details on how to run the DAG in Airflow, refer to the  [**documentation**](https://rudderstack.com/docs/warehouse-actions/airflow-provider).
 
-# License
+## License
 
-The rudderstack-airflow-provider is released under the [**MIT License**][mit_license].
+The RudderStack Airflow Provider is released under the [**MIT License**][mit_license].
 
-# Contribute
+## Contribute
 
-We would love to see you contribute to RudderStack. Get more information on how to contribute [**here**](CONTRIBUTING.md).
+We would love to see you contribute to this project. Get more information on how to contribute [**here**](CONTRIBUTING.md).
 
-# Follow Us
+## Contact us
 
-- [**RudderStack blog**][rudderstack-blog]
-- [**Slack**][slack]
-- [**Twitter**][twitter]
-- [**LinkedIn**][linkedin]
-- [**dev.to**][devto]
-- [**Medium**][medium]
-- [**YouTube**][youtube]
-- [**HackerNews**][hackernews]
-- [**Product Hunt**][producthunt]
+For more information or queries on this feature, you can [**contact us**](mailto:%20docs@rudderstack.com) or start a conversation on our [**Slack**](https://rudderstack.com/join-rudderstack-slack-community) channel.
 
 <!----variables---->
 
