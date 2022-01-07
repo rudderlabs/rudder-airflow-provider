@@ -30,18 +30,27 @@ pip install rudderstack-airflow-provider
 
 ## Usage
 
-A simple DAG for triggering sync for the RudderStack source. For the complete code, refer to this [**example**](examples/sample_dag.py).
+A simple DAG for triggering syncs for a RudderStack source:
 
 ```python
-with DAG('rudderstack-sample',
+with DAG(
+    'rudderstack-sample',
     default_args=default_args,
     description='A simple tutorial DAG',
     schedule_interval=timedelta(days=1),
     start_date=datetime(2021, 1, 1),
     catchup=False,
-    tags=['rs']) as dag:
-    rs_operator = RudderstackOperator(source_id='<source-id>', task_id='<any-task-id>', connection_id='rudderstack_conn')
+    tags=['rs']
+) as dag:
+    rs_operator = RudderstackOperator(
+        source_id='<source-id>',
+        task_id='<any-task-id>',
+        connection_id='rudderstack_conn'
+    )
 ```
+
+For the complete code, refer to this [example](examples/sample_dag.py).
+
 ### Operator parameters
 
 | Parameter             | Description                                                          | Type    | Default               |
