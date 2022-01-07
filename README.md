@@ -66,7 +66,7 @@ For details on how to run the DAG in Airflow, refer to the  [documentation](http
 
 ## License
 
-The RudderStack Airflow Provider is released under the [**MIT License**][mit_license].
+The RudderStack Airflow Provider is released under the [MIT License](LICENSE).
 
 ## Contribute
 
