@@ -1,7 +1,10 @@
-<p align="center"><a href="https://rudderstack.com"><img src="https://user-images.githubusercontent.com/59817155/126267034-ae9870b7-9137-4f45-be65-d621b055a972.png" alt="RudderStack - Customer Data Platform for Developers" height="50"/></a></p>
-<h1 align="center"></h1>
+<p align="center">
+  <a href="https://rudderstack.com/">
+    <img src="https://user-images.githubusercontent.com/59817155/121357083-1c571300-c94f-11eb-8cc7-ce6df13855c9.png">
+  </a>
+</p>
+
 <p align="center"><b>The Customer Data Platform for Developers</b></p>
-<br/>
 
 <p align="center">
   <b>
@@ -9,10 +12,11 @@
     ·
     <a href="https://rudderstack.com/docs/warehouse-actions/airflow-provider/">Documentation</a>
     ·
-    <a href="https://rudderstack.com/join-rudderstack-slack-community">Community Slack</a>
+    <a href="https://rudderstack.com/join-rudderstack-slack-community">Slack Community</a>
   </b>
 </p>
 
+---
 
 # RudderStack Airflow Provider
 
