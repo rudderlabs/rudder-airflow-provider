@@ -20,7 +20,7 @@
 
 # RudderStack Airflow Provider
 
-RudderStack's Airflow Provider lets you schedule and trigger your [**Warehouse Actions**](https://rudderstack.com/docs/warehouse-actions/) syncs from outside RudderStack and integrate them with your existing Airflow workflows.
+The [RudderStack](https://rudderstack.com) Airflow Provider lets you schedule and trigger your [Warehouse Actions](https://rudderstack.com/docs/warehouse-actions/) syncs from outside RudderStack and integrate them with your existing Airflow workflows.
 
 
 | Refer to our detailed technical [**documentation**](https://rudderstack.com/docs/warehouse-actions/airflow-provider/) for more information on this feature. If you have any questions, you can start a conversation on our [**Slack channel**][slack]. |
