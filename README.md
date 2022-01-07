@@ -72,9 +72,9 @@ The RudderStack Airflow Provider is released under the [MIT License](LICENSE).
 
 We would love to see you contribute to this project. Get more information on how to contribute [here](CONTRIBUTING.md).
 
-## Contact us
+## Contact Us
 
-For more information or queries on this feature, you can [**contact us**](mailto:%20docs@rudderstack.com) or start a conversation on our [**Slack**](https://rudderstack.com/join-rudderstack-slack-community) channel.
+For more information or queries on this feature, you can [contact us](mailto:%20docs@rudderstack.com) or start a conversation in our [Slack](https://rudderstack.com/join-rudderstack-slack-community) community.
 
 <!----variables---->
 
