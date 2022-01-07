@@ -64,13 +64,13 @@ The RudderStack operator also supports all the parameters supported by the [Airf
 
 For details on how to run the DAG in Airflow, refer to the [documentation](https://rudderstack.com/docs/warehouse-actions/airflow-provider/#running-the-dag).
 
-## License
-
-The RudderStack Airflow Provider is released under the [MIT License](LICENSE).
-
 ## Contribute
 
 We would love to see you contribute to this project. Get more information on how to contribute [here](CONTRIBUTING.md).
+
+## License
+
+The RudderStack Airflow Provider is released under the [MIT License](LICENSE).
 
 ## Contact Us
 
