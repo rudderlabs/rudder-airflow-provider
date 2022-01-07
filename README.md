@@ -62,7 +62,7 @@ For the complete code, refer to this [example](examples/sample_dag.py).
 
 The RudderStack operator also supports all the parameters supported by the [Airflow base operator](https://airflow.apache.org/docs/apache-airflow/stable/_api/airflow/models/baseoperator/index.html).
 
-For details on how to run the DAG in Airflow, refer to the  [documentation](https://rudderstack.com/docs/warehouse-actions/airflow-provider/#running-the-dag).
+For details on how to run the DAG in Airflow, refer to the [documentation](https://rudderstack.com/docs/warehouse-actions/airflow-provider/#running-the-dag).
 
 ## License
 
