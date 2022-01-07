@@ -70,7 +70,7 @@ The RudderStack Airflow Provider is released under the [MIT License](LICENSE).
 
 ## Contribute
 
-We would love to see you contribute to this project. Get more information on how to contribute [**here**](CONTRIBUTING.md).
+We would love to see you contribute to this project. Get more information on how to contribute [here](CONTRIBUTING.md).
 
 ## Contact us
 
