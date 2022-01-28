@@ -49,7 +49,7 @@ with DAG(
     )
 ```
 
-For the complete code, refer to this [example](examples/sample_dag.py).
+For the complete code, refer to this [example](https://github.com/rudderlabs/rudder-airflow-provider/blob/main/examples/sample_dag.py).
 
 ### Operator Parameters
 
