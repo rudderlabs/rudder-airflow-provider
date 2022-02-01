@@ -30,7 +30,7 @@ class RudderstackHook(HttpHook):
         access_token = self.get_access_token()
         headers = {
             'authorization': f"Bearer {access_token}",
-            'Content-Type': 'text/plain'
+            'Content-Type': 'application/json'
         }
         logging.info('triggering sync for sourceId: %s, endpoint: %s',
                      self.source_id, sync_endpoint)
@@ -51,7 +51,7 @@ class RudderstackHook(HttpHook):
         access_token = self.get_access_token()
         headers = {
             'authorization': f"Bearer {access_token}",
-            'Content-Type': 'text/plain'
+            'Content-Type': 'application/json'
         }
         while True:
             self.method = 'GET'
