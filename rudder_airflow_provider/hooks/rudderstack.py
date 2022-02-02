@@ -27,7 +27,7 @@ class RudderstackHook(HttpHook):
         '''
         self.method = 'POST'
         sync_endpoint = f"/v2/sources/{self.source_id}/start"
-        headers = self.get_api_headers()
+        headers = self.get_request_headers()
         logging.info('triggering sync for sourceId: %s, endpoint: %s',
                      self.source_id, sync_endpoint)
         resp = self.run(endpoint=sync_endpoint, headers=headers,
@@ -44,7 +44,7 @@ class RudderstackHook(HttpHook):
             polls for sync status
         '''
         status_endpoint = f"/v2/sources/{self.source_id}/status"
-        headers = self.get_api_headers()
+        headers = self.get_request_headers()
         while True:
             self.method = 'GET'
             resp = self.run(endpoint=status_endpoint, headers=headers).json()
@@ -61,7 +61,7 @@ class RudderstackHook(HttpHook):
                 break
             time.sleep(STATUS_POLL_INTERVAL)
 
-    def get_api_headers(self) -> dict:
+    def get_request_headers(self) -> dict:
         access_token = self.get_access_token()
         return {
             'authorization': f"Bearer {access_token}",
