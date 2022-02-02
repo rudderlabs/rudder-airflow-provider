@@ -3,7 +3,6 @@ import time
 
 from airflow.exceptions import AirflowException
 from airflow.providers.http.hooks.http import HttpHook
-from requests.models import Response
 
 STATUS_FINISHED = 'finished'
 STATUS_POLL_INTERVAL = 60
