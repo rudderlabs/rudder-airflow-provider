@@ -1,3 +1,4 @@
+from email import header
 import unittest
 from unittest import mock
 from airflow.exceptions import AirflowException
@@ -28,8 +29,11 @@ class RudderstackHookTest(unittest.TestCase):
         start_resp.status_code = 204
         mock_run.return_value = start_resp
         hook.trigger_sync()
-        mock_run.assert_called_once_with(endpoint=sync_endpoint, headers={
-                 'authorization': f"Bearer {access_token}"}, extra_options={'check_response': False})
+        expected_headers = {
+                 'authorization': f"Bearer {access_token}",
+                 'Content-Type': 'application/json'
+                 }
+        mock_run.assert_called_once_with(endpoint=sync_endpoint, headers=expected_headers, extra_options={'check_response': False})
     
     @mock.patch('rudder_airflow_provider.hooks.rudderstack.HttpHook.get_connection')
     @mock.patch('rudder_airflow_provider.hooks.rudderstack.HttpHook.run')
@@ -43,8 +47,11 @@ class RudderstackHookTest(unittest.TestCase):
         start_resp.status_code = 409
         mock_run.return_value = start_resp
         hook.trigger_sync()
-        mock_run.assert_called_once_with(endpoint=sync_endpoint, headers={
-                 'authorization': f"Bearer {access_token}"}, extra_options={'check_response': False})
+        expected_headers = {
+                 'authorization': f"Bearer {access_token}",
+                 'Content-Type': 'application/json'
+                 }
+        mock_run.assert_called_once_with(endpoint=sync_endpoint, headers=expected_headers, extra_options={'check_response': False})
     
     @mock.patch('rudder_airflow_provider.hooks.rudderstack.HttpHook.get_connection')
     @mock.patch('rudder_airflow_provider.hooks.rudderstack.HttpHook.run')
@@ -58,8 +65,11 @@ class RudderstackHookTest(unittest.TestCase):
         start_resp.status_code = 500
         mock_run.return_value = start_resp
         self.assertRaises(AirflowException, hook.trigger_sync)
-        mock_run.assert_called_once_with(endpoint=sync_endpoint, headers={
-                 'authorization': f"Bearer {access_token}"}, extra_options={'check_response': False})
+        expected_headers = {
+                 'authorization': f"Bearer {access_token}",
+                 'Content-Type': 'application/json'
+                 }
+        mock_run.assert_called_once_with(endpoint=sync_endpoint, headers=expected_headers, extra_options={'check_response': False})
 
     @mock.patch('rudder_airflow_provider.hooks.rudderstack.HttpHook.get_connection')
     @mock.patch('rudder_airflow_provider.hooks.rudderstack.HttpHook.run')
@@ -84,8 +94,11 @@ class RudderstackHookTest(unittest.TestCase):
         mock_connection.return_value = Connection(password=access_token)
         hook = RudderstackHook('rudderstack_connection', source_id)
         hook.poll_for_status()
-        mock_run.assert_called_once_with(endpoint=status_endpoint, headers={
-                 'authorization': f"Bearer {access_token}"})
+        expected_headers = {
+                 'authorization': f"Bearer {access_token}",
+                 'Content-Type': 'application/json'
+                 }
+        mock_run.assert_called_once_with(endpoint=status_endpoint, headers=expected_headers)
 
     @mock.patch('rudder_airflow_provider.hooks.rudderstack.HttpHook.get_connection')
     @mock.patch('rudder_airflow_provider.hooks.rudderstack.HttpHook.run')
@@ -101,8 +114,11 @@ class RudderstackHookTest(unittest.TestCase):
         mock_connection.return_value = Connection(password=access_token)
         hook = RudderstackHook('rudderstack_connection', source_id)
         self.assertRaises(AirflowException, hook.poll_for_status)
-        mock_run.assert_called_once_with(endpoint=status_endpoint, headers={
-                 'authorization': f"Bearer {access_token}"})
+        expected_headers = {
+                 'authorization': f"Bearer {access_token}",
+                 'Content-Type': 'application/json'
+                 }
+        mock_run.assert_called_once_with(endpoint=status_endpoint, headers=expected_headers)
 
 
 
