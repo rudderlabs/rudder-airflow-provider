@@ -3,10 +3,9 @@ import time
 
 from airflow.exceptions import AirflowException
 from airflow.providers.http.hooks.http import HttpHook
-from requests.models import Response
 
 STATUS_FINISHED = 'finished'
-STATUS_POLL_INTERVAL = 10
+STATUS_POLL_INTERVAL = 60
 
 
 class RudderstackHook(HttpHook):
@@ -27,11 +26,11 @@ class RudderstackHook(HttpHook):
         '''
         self.method = 'POST'
         sync_endpoint = f"/v2/sources/{self.source_id}/start"
-        access_token = self.get_access_token()
+        headers = self.get_request_headers()
         logging.info('triggering sync for sourceId: %s, endpoint: %s',
                      self.source_id, sync_endpoint)
-        resp = self.run(endpoint=sync_endpoint, headers={
-                'authorization': f"Bearer {access_token}"}, extra_options={"check_response": False})
+        resp = self.run(endpoint=sync_endpoint, headers=headers,
+            extra_options={"check_response": False})
         if resp.status_code in (200, 204, 201):
             logging.info('Job triggered for sourceId: %s', self.source_id)
         elif resp.status_code == 409:
@@ -44,11 +43,10 @@ class RudderstackHook(HttpHook):
             polls for sync status
         '''
         status_endpoint = f"/v2/sources/{self.source_id}/status"
-        access_token = self.get_access_token()
+        headers = self.get_request_headers()
         while True:
             self.method = 'GET'
-            resp = self.run(endpoint=status_endpoint, headers={
-                            'authorization': f"Bearer {access_token}"}).json()
+            resp = self.run(endpoint=status_endpoint, headers=headers).json()
             job_status = resp['status']
             logging.info('sync status for sourceId: %s, status: %s',
                          self.source_id, job_status)
@@ -61,6 +59,13 @@ class RudderstackHook(HttpHook):
                 logging.info('sync finished for sourceId: %s', self.source_id)
                 break
             time.sleep(STATUS_POLL_INTERVAL)
+
+    def get_request_headers(self) -> dict:
+        access_token = self.get_access_token()
+        return {
+            'authorization': f"Bearer {access_token}",
+            'Content-Type': 'application/json'
+        }
 
     def get_access_token(self) -> str:
         '''
