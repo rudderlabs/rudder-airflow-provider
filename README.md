@@ -10,7 +10,7 @@
   <b>
     <a href="https://rudderstack.com">Website</a>
     ·
-    <a href="https://rudderstack.com/docs/warehouse-actions/features/airflow-provider/">Documentation</a>
+    <a href="https://www.rudderstack.com/docs/reverse-etl/features/airflow-provider">Documentation</a>
     ·
     <a href="https://rudderstack.com/join-rudderstack-slack-community">Slack Community</a>
   </b>
@@ -20,9 +20,9 @@
 
 # RudderStack Airflow Provider
 
-The [RudderStack](https://rudderstack.com) Airflow Provider lets you programmatically schedule and trigger your [Warehouse Actions](https://rudderstack.com/docs/warehouse-actions/) syncs from outside RudderStack and integrate them with your existing Airflow workflows.
+The [RudderStack](https://rudderstack.com) Airflow Provider lets you programmatically schedule and trigger your [Reverse ETL](https://www.rudderstack.com/docs/reverse-etl) syncs from outside RudderStack and integrate them with your existing Airflow workflows.
 
-| For more information on using the Airflow Provider utility, refer to the [documentation](https://rudderstack.com/docs/warehouse-actions/features/airflow-provider/). |
+| For more information on using the Airflow Provider utility, refer to the [documentation](https://www.rudderstack.com/docs/reverse-etl/features/airflow-provider/). |
 | :---------|
 
 ## Installation
@@ -65,7 +65,7 @@ For the complete code, refer to this [example](https://github.com/rudderlabs/rud
 
 The RudderStack operator also supports all the parameters supported by the [Airflow base operator](https://airflow.apache.org/docs/apache-airflow/stable/_api/airflow/models/baseoperator/index.html).
 
-For details on how to run the DAG in Airflow, refer to the [documentation](https://rudderstack.com/docs/warehouse-actions/features/airflow-provider/#running-the-dag).
+For details on how to run the DAG in Airflow, refer to the [documentation](https://www.rudderstack.com/docs/reverse-etl/features/airflow-provider/#running-the-dag).
 
 ## Contribute
 
