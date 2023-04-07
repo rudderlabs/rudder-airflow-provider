@@ -4,7 +4,7 @@ import time
 from airflow.exceptions import AirflowException
 from airflow.providers.http.hooks.http import HttpHook
 
-STATUS_FINISHED = 'finished'
+FINISHED_AT = 'finished_at'
 STATUS_POLL_INTERVAL = 60
 
 
@@ -47,7 +47,7 @@ class RudderstackHook(HttpHook):
         while True:
             self.method = 'GET'
             resp = self.run(endpoint=status_endpoint, headers=headers).json()
-            finish_time = resp.get('finished_at') or None
+            finish_time = resp.get(FINISHED_AT) or None
             if finish_time:
                 # Check for any error
                 if resp.get('error'):
