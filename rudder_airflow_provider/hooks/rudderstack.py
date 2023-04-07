@@ -47,11 +47,9 @@ class RudderstackHook(HttpHook):
         while True:
             self.method = 'GET'
             resp = self.run(endpoint=status_endpoint, headers=headers).json()
-            job_status = resp['status']
-            logging.info('sync status for sourceId: %s, status: %s',
-                         self.source_id, job_status)
-
-            if job_status == STATUS_FINISHED:
+            finish_time = resp.get('finished_at') or None
+            if finish_time:
+                # Check for any error
                 if resp.get('error'):
                     raise AirflowException(
                         f"sync for sourceId: {self.source_id} failed with error: {resp['error']}")
