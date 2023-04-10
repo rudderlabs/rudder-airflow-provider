@@ -89,14 +89,15 @@ class RudderstackHookTest(unittest.TestCase):
         finished_status_response = Response()
         finished_status_response.status_code = 200
         running_resp = {
-            'id': 'cgnrus5fsq3vbs6li0hg',
-            'job_id': '27abc3Nh4NpaIRDalQAtHdboI5R',
-            'started_at': '2023-04-07T07:00:00.002103Z'}
+            "finishedAt": "0001-01-01T00:00:00Z",
+            "startedAt": "2023-04-10T06:31:10Z",
+            "jobId": "2M8sOWom4T0HItRp3ptGMsXa1Ql",
+            "jobRunId": "cgpqqbjkag4l4djnrsjg"}
         finished_resp = {
-            'id': 'cgnrus5fsq3vbs6li0hg',
-            'job_id': '27abc3Nh4NpaIRDalQAtHdboI5R',
-            'started_at': '2023-04-07T07:00:00.002103Z',
-            'finished_at': '2023-04-07T07:10:14.826631Z'}
+            "finishedAt": "2023-04-10T07:31:10Z",
+            "startedAt": "2023-04-10T06:31:10Z",
+            "jobId": "2M8sOWom4T0HItRp3ptGMsXa1Ql",
+            "jobRunId": "cgpqqbjkag4l4djnrsjg"}
 
         finished_status_response.json = mock.MagicMock(side_effect=[running_resp, finished_resp])
         mock_run.return_value = finished_status_response
@@ -119,10 +120,10 @@ class RudderstackHookTest(unittest.TestCase):
         finished_status_response = Response()
         finished_status_response.status_code = 200
         finished_status_response.json = mock.MagicMock(return_value={
-            'id': 'cgnrus5fsq3vbs6li0hg',
-            'job_id': '27abc3Nh4NpaIRDalQAtHdboI5R',
-            'started_at': '2023-04-07T07:00:00.002103Z',
-            'finished_at': '2023-04-07T07:10:14.826631Z',
+            'jobRunId': 'cgnrus5fsq3vbs6li0hg',
+            'jobId': '27abc3Nh4NpaIRDalQAtHdboI5R',
+            'startedAt': '2023-04-07T07:00:00.002103Z',
+            'finishedAt': '2023-04-07T07:10:14.826631Z',
             'error': 'some-eror'})
         mock_run.return_value = finished_status_response
         mock_connection.return_value = Connection(password=access_token)
