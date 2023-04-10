@@ -4,8 +4,9 @@ import time
 from airflow.exceptions import AirflowException
 from airflow.providers.http.hooks.http import HttpHook
 
-STATUS_FINISHED = 'finished'
+FINISHED_AT = 'finishedAt'
 STATUS_POLL_INTERVAL = 60
+JOB_IN_PROGRESS_FINISH_TIME = '0001-01-01T00:00:00Z'
 
 
 class RudderstackHook(HttpHook):
@@ -47,11 +48,9 @@ class RudderstackHook(HttpHook):
         while True:
             self.method = 'GET'
             resp = self.run(endpoint=status_endpoint, headers=headers).json()
-            job_status = resp['status']
-            logging.info('sync status for sourceId: %s, status: %s',
-                         self.source_id, job_status)
-
-            if job_status == STATUS_FINISHED:
+            finish_time = resp.get(FINISHED_AT) or None
+            if finish_time and finish_time != JOB_IN_PROGRESS_FINISH_TIME:
+                # Check for any error
                 if resp.get('error'):
                     raise AirflowException(
                         f"sync for sourceId: {self.source_id} failed with error: {resp['error']}")
