@@ -25,9 +25,10 @@ class RudderstackHookTest(unittest.TestCase):
         mock_connection.return_value = Connection(password=access_token)
         sync_endpoint = f"/v2/sources/{source_id}/start"
         start_resp = Response()
+        start_resp.json = mock.MagicMock(return_value={'runId': 'some-run-id'})
         start_resp.status_code = 204
         mock_run.return_value = start_resp
-        hook.trigger_sync()
+        run_id = hook.trigger_sync()
         expected_headers = {
                  'authorization': f"Bearer {access_token}",
                  'Content-Type': 'application/json'
@@ -45,7 +46,8 @@ class RudderstackHookTest(unittest.TestCase):
         start_resp = Response()
         start_resp.status_code = 409
         mock_run.return_value = start_resp
-        hook.trigger_sync()
+        run_id = hook.trigger_sync()
+        self.assertIsNone(run_id)
         expected_headers = {
                  'authorization': f"Bearer {access_token}",
                  'Content-Type': 'application/json'
@@ -84,15 +86,16 @@ class RudderstackHookTest(unittest.TestCase):
     @mock.patch('rudder_airflow_provider.hooks.rudderstack.HttpHook.run')
     def test_poll_status(self, mock_run: mock.Mock, mock_connection: mock.Mock):
         source_id = 'some-source-id'
+        run_id = 'some-run-id'
         access_token = 'some-password'
-        status_endpoint = f"/v2/sources/{source_id}/status"
+        status_endpoint = f"/v2/sources/{source_id}/runs/{run_id}/status"
         finished_status_response = Response()
         finished_status_response.status_code = 200
         finished_status_response.json = mock.MagicMock(return_value={'status': 'finished'})
         mock_run.return_value = finished_status_response
         mock_connection.return_value = Connection(password=access_token)
         hook = RudderstackHook('rudderstack_connection', source_id)
-        hook.poll_for_status()
+        hook.poll_for_status(run_id)
         expected_headers = {
                  'authorization': f"Bearer {access_token}",
                  'Content-Type': 'application/json'
@@ -103,8 +106,9 @@ class RudderstackHookTest(unittest.TestCase):
     @mock.patch('rudder_airflow_provider.hooks.rudderstack.HttpHook.run')
     def test_poll_status_failure(self, mock_run: mock.Mock, mock_connection: mock.Mock):
         source_id = 'some-source-id'
+        run_id = 'some-run-id'
         access_token = 'some-password'
-        status_endpoint = f"/v2/sources/{source_id}/status"
+        status_endpoint = f"/v2/sources/{source_id}/runs/{run_id}/status"
         finished_status_response = Response()
         finished_status_response.status_code = 200
         finished_status_response.json = mock.MagicMock(
@@ -112,7 +116,7 @@ class RudderstackHookTest(unittest.TestCase):
         mock_run.return_value = finished_status_response
         mock_connection.return_value = Connection(password=access_token)
         hook = RudderstackHook('rudderstack_connection', source_id)
-        self.assertRaises(AirflowException, hook.poll_for_status)
+        self.assertRaises(AirflowException, hook.poll_for_status, run_id)
         expected_headers = {
                  'authorization': f"Bearer {access_token}",
                  'Content-Type': 'application/json'

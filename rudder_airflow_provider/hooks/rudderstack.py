@@ -20,7 +20,7 @@ class RudderstackHook(HttpHook):
         self.source_id = source_id
         super().__init__(http_conn_id=self.connection_id)
 
-    def trigger_sync(self):
+    def trigger_sync(self) -> str | None:
         '''
             trigger sync for a source
         '''
@@ -33,16 +33,17 @@ class RudderstackHook(HttpHook):
             extra_options={"check_response": False})
         if resp.status_code in (200, 204, 201):
             logging.info('Job triggered for sourceId: %s', self.source_id)
+            return resp.json().get('runId')
         elif resp.status_code == 409:
             logging.info('Job is already running for sourceId: %s', self.source_id)
         else:
             raise AirflowException(f"Error while starting sync for sourceId: {self.source_id}, response: {resp.status_code}")
 
-    def poll_for_status(self):
+    def poll_for_status(self, run_id: str):
         '''
             polls for sync status
         '''
-        status_endpoint = f"/v2/sources/{self.source_id}/status"
+        status_endpoint = f"/v2/sources/{self.source_id}/runs/{run_id}/status"
         headers = self.get_request_headers()
         while True:
             self.method = 'GET'
