@@ -33,6 +33,11 @@ pip install rudderstack-airflow-provider
 
 ## Usage
 
+### RudderstackOperator
+
+> [!NOTE]  
+> Use [RudderstackRETLOperator](#rudderstackretloperator) for reverse ETL connections
+
 A simple DAG for triggering syncs for a RudderStack source:
 
 ```python
@@ -54,10 +59,10 @@ with DAG(
 
 For the complete code, refer to this [example](https://github.com/rudderlabs/rudder-airflow-provider/blob/main/examples/sample_dag.py).
 
-### Operator Parameters
+#### Operator Parameters
 
 | Parameter | Description | Type | Default |
-| :--- |:--- | :--- | :--- |
+| :--- |:--- | :--- | :--- 
 | `source_id` | Valid RudderStack source ID | String | `None` |
 | `task_id` | A unique task ID within a DAG | String | `None` |
 | `wait_for_completion` | If `True`, the task will wait for sync to complete. | Boolean | `False` |
@@ -66,6 +71,41 @@ For the complete code, refer to this [example](https://github.com/rudderlabs/rud
 The RudderStack operator also supports all the parameters supported by the [Airflow base operator](https://airflow.apache.org/docs/apache-airflow/stable/_api/airflow/models/baseoperator/index.html).
 
 For details on how to run the DAG in Airflow, refer to the [documentation](https://www.rudderstack.com/docs/reverse-etl/features/airflow-provider/#running-the-dag).
+
+### RudderstackRETLOperator
+
+Trigger syncs for RETL connections
+
+```python
+with DAG('rudderstack-sample',
+    default_args=default_args,
+    description='A simple tutorial DAG',
+    schedule_interval=timedelta(days=1),
+    start_date=datetime(2021, 1, 1),
+    catchup=False,
+    tags=['rs']) as dag:
+    rs_operator = RudderstackRETLOperator(
+        retl_connection_id='2aiDQzMqP6LNuUokWstmaubcZOP',
+        task_id='retl-test-sync',
+        connection_id='rudder_yeshwanth_dev',
+        sync_type='full',
+        wait_for_completion=True
+    )
+```
+
+#### Operator parameters
+
+| Parameter | Description | Type | Default |
+| :--- |:--- | :--- | :--- 
+| `retl_connection_id` | Valid RudderStack RETL connection ID | String | `None` |
+| `task_id` | A unique task ID within a DAG | String | `None` |
+| `wait_for_completion` | If `True`, the task will wait for sync to complete. | Boolean | `False` |
+| `connection_id` | The Airflow connection to use for connecting to the Rudderstack API. | String | `rudderstack_default` |
+|`sync_type`| Type of sync to trigger | `incremental` or `full`| `incremntal`|
+
+
+For details on how to run the DAG in Airflow, refer to the [documentation](https://www.rudderstack.com/docs/reverse-etl/features/airflow-provider/#running-the-dag).
+
 
 ## Contribute
 
