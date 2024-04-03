@@ -29,6 +29,8 @@ class RudderstackOperator(baseoperator.BaseOperator):
 
 
 class RudderstackRETLOperator(baseoperator.BaseOperator):
+    template_fields = ('retl_connection_id', 'sync_type')
+    
     '''
         Rudderstack operator for RETL connnections
         :param retl_connection_id: unique id of the retl connection

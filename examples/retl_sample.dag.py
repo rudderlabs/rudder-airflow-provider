@@ -22,10 +22,10 @@ with DAG('rudderstack-sample',
     catchup=False,
     tags=['rs']) as dag:
     rs_operator = RudderstackRETLOperator(
-        retl_connection_id='2aiDQzMqP6LNuUokWstmaubcZOP',
-        task_id='retl-test-sync',
-        connection_id='rudder_yeshwanth_dev',
-        sync_type='full',
+        retl_connection_id="{{ var.value.retl_connection_id }}",
+        task_id='<replace task id>',
+        connection_id='<rudderstack api connection id>',
+        sync_type="{{ var.value.sync_type }}",
         wait_for_completion=True
     )
 
