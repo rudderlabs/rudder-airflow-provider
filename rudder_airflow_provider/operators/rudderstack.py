@@ -3,6 +3,10 @@ from airflow.models import baseoperator
 from rudder_airflow_provider.hooks.rudderstack import RudderstackHook
 
 RUDDERTACK_DEFAULT_CONNECTION_ID = 'rudderstack_default'
+RETL_SYNC_TYPE_FULL = 'full'
+RETL_SYNC_TYPE_INCREMENTAL = 'incremental'
+
+
 class RudderstackOperator(baseoperator.BaseOperator):
     '''
         Rudderstack operator for airflow DAGs
@@ -40,7 +44,7 @@ class RudderstackRETLOperator(baseoperator.BaseOperator):
     '''
     def __init__(self, 
                  retl_connection_id: str, 
-                 sync_type: str, 
+                 sync_type: str = 'incremental', 
                  connection_id: str = RUDDERTACK_DEFAULT_CONNECTION_ID,
                  wait_for_completion: bool = False,
                  **kwargs):
