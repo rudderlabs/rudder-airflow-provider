@@ -21,6 +21,7 @@ with DAG('rudderstack-sample',
     start_date=datetime(2021, 1, 1),
     catchup=False,
     tags=['rs']) as dag:
+    # retl_connection_id, sync_type are template fields
     rs_operator = RudderstackRETLOperator(
         retl_connection_id="{{ var.value.retl_connection_id }}",
         task_id='<replace task id>',

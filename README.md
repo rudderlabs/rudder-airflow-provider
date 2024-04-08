@@ -97,11 +97,11 @@ with DAG('rudderstack-sample',
 
 | Parameter | Description | Type | Default |
 | :--- |:--- | :--- | :--- 
-| `retl_connection_id` | Valid RudderStack RETL connection ID | String | `None` |
+| `retl_connection_id` | Valid RudderStack RETL connection ID | String (templatable) | `None` |
 | `task_id` | A unique task ID within a DAG | String | `None` |
 | `wait_for_completion` | If `True`, the task will wait for sync to complete. | Boolean | `False` |
 | `connection_id` | The Airflow connection to use for connecting to the Rudderstack API. | String | `rudderstack_default` |
-|`sync_type`| Type of sync to trigger | `incremental` or `full`| `incremntal`|
+|`sync_type`| Type of sync to trigger | `incremental` or `full` (templatable) | `incremntal`|
 
 
 For details on how to run the DAG in Airflow, refer to the [documentation](https://www.rudderstack.com/docs/reverse-etl/features/airflow-provider/#running-the-dag).
