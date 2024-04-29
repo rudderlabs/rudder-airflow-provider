@@ -11,6 +11,9 @@ class RudderstackOperator(baseoperator.BaseOperator):
     '''
         Rudderstack operator for airflow DAGs
     '''
+
+    template_fields = ('source_id', 'connection_id')
+
     def __init__(self, source_id: str, connection_id: str = RUDDERTACK_DEFAULT_CONNECTION_ID,
                  wait_for_completion: bool = False, **kwargs):
         '''
