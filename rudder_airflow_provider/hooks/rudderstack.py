@@ -1,6 +1,7 @@
 import logging
 import time
 import datetime
+from importlib.metadata import PackageNotFoundError, version
 from typing import Any, Dict, Mapping, Optional
 from urllib.parse import urljoin
 from airflow.exceptions import AirflowException
@@ -71,10 +72,15 @@ class BaseRudderStackHook(HttpHook):
         """
         Returns the request headers to be used by the hook.
         """
+        try:
+            __version__ = version("rudderstack-airflow-provider")
+        except PackageNotFoundError:
+            __version__ = "UnknownVersion"
         access_token = self._get_access_token()
         return {
             "authorization": f"Bearer {access_token}",
             "Content-Type": "application/json",
+            "User-Agent": f"RudderAirflow/{__version__}",
         }
 
     def make_request(

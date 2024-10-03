@@ -1,4 +1,5 @@
 import pytest
+from importlib.metadata import version
 from unittest.mock import patch, MagicMock
 from airflow.exceptions import AirflowException
 from airflow.models.connection import Connection
@@ -52,6 +53,7 @@ def test_get_request_headers(mock_connection, airflow_connection):
     assert basehook._get_request_headers() == {
         "authorization": f"Bearer {TEST_ACCESS_TOKEN}",
         "Content-Type": "application/json",
+        "User-Agent": f"RudderAirflow/{get_version()}"
     }
 
 
@@ -71,6 +73,7 @@ def test_make_request_success(mock_request, mock_connection, airflow_connection)
         headers={
             "authorization": f"Bearer {TEST_ACCESS_TOKEN}",
             "Content-Type": "application/json",
+            "User-Agent": f"RudderAirflow/{get_version()}"
         },
         timeout=30,
     )
@@ -123,6 +126,7 @@ def test_start_sync(mock_request, mock_connection, airflow_connection):
         headers={
             "authorization": f"Bearer {TEST_ACCESS_TOKEN}",
             "Content-Type": "application/json",
+            "User-Agent": f"RudderAirflow/{get_version()}"
         },
         timeout=30,
         json={},
@@ -171,6 +175,7 @@ def test_poll_sync_success(mock_request, mock_connection, airflow_connection):
         headers={
             "authorization": f"Bearer {TEST_ACCESS_TOKEN}",
             "Content-Type": "application/json",
+            "User-Agent": f"RudderAirflow/{get_version()}"
         },
         timeout=30,
     )
@@ -213,6 +218,7 @@ def test_start_profile_run(mock_request, mock_connection, airflow_connection):
         headers={
             "authorization": f"Bearer {TEST_ACCESS_TOKEN}",
             "Content-Type": "application/json",
+            "User-Agent": f"RudderAirflow/{get_version()}"
         },
         timeout=30,
     )
@@ -259,6 +265,7 @@ def test_poll_profile_run_success(mock_request, mock_connection, airflow_connect
         headers={
             "authorization": f"Bearer {TEST_ACCESS_TOKEN}",
             "Content-Type": "application/json",
+            "User-Agent": f"RudderAirflow/{get_version()}"
         },
         timeout=30,
     )
@@ -283,6 +290,8 @@ def test_poll_profile_run_timeout(mock_request, mock_connection, airflow_connect
         profiles_hook.poll_profile_run(TEST_PROFILE_ID, TEST_PROFILE_RUN_ID)
     assert mock_request.call_count <= 4
 
+def get_version():
+    return version("rudderstack-airflow-provider")
 
 if __name__ == "__main__":
     pytest.main()

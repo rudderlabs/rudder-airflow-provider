@@ -28,4 +28,4 @@ requires-python = ">= 3.6"
 exclude = ["*test*"]
 
 [project.entry-points.apache_airflow_provider]
-provider_info = "sample_provider.__init__:get_provider_info"
+provider_info = "rudder_airflow_provider.__init__:get_provider_info"
