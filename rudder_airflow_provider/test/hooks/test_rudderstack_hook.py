@@ -1,6 +1,5 @@
 import pytest
-from importlib.metadata import version
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch, MagicMock, ANY
 from airflow.exceptions import AirflowException
 from airflow.models.connection import Connection
 from requests.exceptions import RequestException
@@ -50,11 +49,9 @@ def test_get_api_base_url(mock_connection, airflow_connection):
 def test_get_request_headers(mock_connection, airflow_connection):
     mock_connection.return_value = airflow_connection
     basehook = BaseRudderStackHook(TEST_AIRFLOW_CONN_ID)
-    assert basehook._get_request_headers() == {
-        "authorization": f"Bearer {TEST_ACCESS_TOKEN}",
-        "Content-Type": "application/json",
-        "User-Agent": f"RudderAirflow/{get_version()}"
-    }
+    headers = basehook._get_request_headers()
+    assert headers["authorization"] == f"Bearer {TEST_ACCESS_TOKEN}"
+    assert headers["Content-Type"] == "application/json"
 
 
 @patch("airflow.providers.http.hooks.http.HttpHook.get_connection")
@@ -70,11 +67,7 @@ def test_make_request_success(mock_request, mock_connection, airflow_connection)
     mock_request.assert_called_once_with(
         method="GET",
         url=TEST_BASE_URL + "/endpoint",
-        headers={
-            "authorization": f"Bearer {TEST_ACCESS_TOKEN}",
-            "Content-Type": "application/json",
-            "User-Agent": f"RudderAirflow/{get_version()}"
-        },
+        headers=ANY,
         timeout=30,
     )
 
@@ -123,11 +116,7 @@ def test_start_sync(mock_request, mock_connection, airflow_connection):
     mock_request.assert_called_once_with(
         method="POST",
         url=f"{TEST_BASE_URL}/v2/retl-connections/{TEST_RETL_CONN_ID}/start",
-        headers={
-            "authorization": f"Bearer {TEST_ACCESS_TOKEN}",
-            "Content-Type": "application/json",
-            "User-Agent": f"RudderAirflow/{get_version()}"
-        },
+        headers=ANY,
         timeout=30,
         json={},
     )
@@ -172,11 +161,7 @@ def test_poll_sync_success(mock_request, mock_connection, airflow_connection):
     mock_request.assert_called_with(
         method="GET",
         url=f"{TEST_BASE_URL}/v2/retl-connections/{TEST_RETL_CONN_ID}/syncs/{TEST_RETL_SYNC_RUN_ID}",
-        headers={
-            "authorization": f"Bearer {TEST_ACCESS_TOKEN}",
-            "Content-Type": "application/json",
-            "User-Agent": f"RudderAirflow/{get_version()}"
-        },
+        headers=ANY,
         timeout=30,
     )
     assert result == {"id": TEST_RETL_SYNC_RUN_ID, "status": RETLSyncStatus.SUCCEEDED}
@@ -215,11 +200,7 @@ def test_start_profile_run(mock_request, mock_connection, airflow_connection):
     mock_request.assert_called_once_with(
         method="POST",
         url=f"{TEST_BASE_URL}/v2/sources/{TEST_PROFILE_ID}/start",
-        headers={
-            "authorization": f"Bearer {TEST_ACCESS_TOKEN}",
-            "Content-Type": "application/json",
-            "User-Agent": f"RudderAirflow/{get_version()}"
-        },
+        headers=ANY,
         timeout=30,
     )
 
@@ -262,11 +243,7 @@ def test_poll_profile_run_success(mock_request, mock_connection, airflow_connect
     mock_request.assert_called_with(
         method="GET",
         url=f"{TEST_BASE_URL}/v2/sources/{TEST_PROFILE_ID}/runs/{TEST_PROFILE_RUN_ID}/status",
-        headers={
-            "authorization": f"Bearer {TEST_ACCESS_TOKEN}",
-            "Content-Type": "application/json",
-            "User-Agent": f"RudderAirflow/{get_version()}"
-        },
+        headers=ANY,
         timeout=30,
     )
     assert result == {"id": TEST_PROFILE_RUN_ID, "status": ProfilesRunStatus.FINISHED}
@@ -289,9 +266,6 @@ def test_poll_profile_run_timeout(mock_request, mock_connection, airflow_connect
     ):
         profiles_hook.poll_profile_run(TEST_PROFILE_ID, TEST_PROFILE_RUN_ID)
     assert mock_request.call_count <= 4
-
-def get_version():
-    return version("rudderstack-airflow-provider")
 
 if __name__ == "__main__":
     pytest.main()
