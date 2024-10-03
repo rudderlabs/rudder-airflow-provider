@@ -1,12 +1,5 @@
 [build-system]
 requires = [
-    "setuptools>=42",
-    "wheel"
-]
-build-backend = "setuptools.build_meta"
-
-[build-system]
-requires = [
     "setuptools >= 61.0",
     "wheel"]
 build-backend = "setuptools.build_meta"
@@ -32,7 +25,7 @@ dependencies = [
 requires-python = ">= 3.6"
 
 [tool.setuptools.packages.find]
-exclude = *test*
+exclude = ["*test*"]
 
 [project.entry-points.apache_airflow_provider]
 provider_info = "sample_provider.__init__:get_provider_info"
