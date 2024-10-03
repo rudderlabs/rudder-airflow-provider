@@ -19,6 +19,13 @@ jobs:
     - name: Install dependencies
       run: |
         pip3 install -r requirements.txt
-    - name: Test with unittest
+    - name: Test with pytest
       run: |
+        pip3 install pytest-cov
         make test
+    - name: Upload Coverage to Codecov
+      uses: codecov/codecov-action@v4
+      with:
+          fail_ci_if_error: true
+          files: ./coverage.xml
+          token: ${{ secrets.CODECOV_TOKEN }}
