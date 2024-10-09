@@ -113,7 +113,7 @@ class RudderstackProfilesOperator(baseoperator.BaseOperator):
         )
         profile_run_id = rs_profiles_hook.start_profile_run(self.profile_id)
         if self.wait_for_completion:
-            logging.info(
+            self.log.info(
                 f"Poll and wait for profiles run to finish for profilesId: {self.profile_id}, runId: {profile_run_id}"
             )
             rs_profiles_hook.poll_profile_run(self.profile_id, profile_run_id)

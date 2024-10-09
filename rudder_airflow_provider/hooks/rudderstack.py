@@ -116,7 +116,7 @@ class BaseRudderStackHook(HttpHook):
                 response.raise_for_status()
                 return response.json()
             except requests.RequestException as e:
-                logging.error(f"Request to url: {url} failed: {e}")
+                self.log.error(f"Request to url: {url} failed: {e}")
                 if num_retries == self.request_max_retries:
                     break
                 num_retries += 1
