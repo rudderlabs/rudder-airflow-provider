@@ -10,8 +10,6 @@
   <b>
     <a href="https://rudderstack.com">Website</a>
     ·
-    <a href="https://www.rudderstack.com/docs/reverse-etl/features/airflow-provider">Documentation</a>
-    ·
     <a href="https://rudderstack.com/join-rudderstack-slack-community">Slack Community</a>
   </b>
 </p>
@@ -20,10 +18,8 @@
 
 # RudderStack Airflow Provider
 
-The [RudderStack](https://rudderstack.com) Airflow Provider lets you programmatically schedule and trigger your [Reverse ETL](https://www.rudderstack.com/docs/reverse-etl) syncs from outside RudderStack and integrate them with your existing Airflow workflows.
+The [RudderStack](https://rudderstack.com) Airflow Provider lets you programmatically schedule and trigger your [Reverse ETL](https://www.rudderstack.com/docs/reverse-etl) syncs and Profiles runs outside RudderStack and integrate them with your existing Airflow workflows.
 
-| For more information on using the Airflow Provider utility, refer to the [documentation](https://www.rudderstack.com/docs/reverse-etl/features/airflow-provider/). |
-| :---------|
 
 ## Installation
 
@@ -33,78 +29,83 @@ pip install rudderstack-airflow-provider
 
 ## Usage
 
-### RudderstackOperator
+### RudderstackRETLOperator
 
 > [!NOTE]  
 > Use [RudderstackRETLOperator](#rudderstackretloperator) for reverse ETL connections
 
-A simple DAG for triggering syncs for a RudderStack source:
+A simple DAG for triggering syncs for a RudderStack Reverse ETL source:
 
 ```python
 with DAG(
-    'rudderstack-sample',
+    "rudderstack-retl-sample",
     default_args=default_args,
-    description='A simple tutorial DAG',
+    description="A simple tutorial DAG for reverse etl",
     schedule_interval=timedelta(days=1),
     start_date=datetime(2021, 1, 1),
     catchup=False,
-    tags=['rs']
+    tags=["rs-retl"],
 ) as dag:
-    rs_operator = RudderstackOperator(
-        source_id='<source-id>',
-        task_id='<any-task-id>',
-        connection_id='rudderstack_conn'
+    # retl_connection_id, sync_type are template fields
+    rs_operator = RudderstackRETLOperator(
+        retl_connection_id="connection_id",
+        task_id="<replace task id>",
+        connection_id="<rudderstack api airflow connection id>"
     )
 ```
 
-For the complete code, refer to this [example](https://github.com/rudderlabs/rudder-airflow-provider/blob/main/examples/sample_dag.py).
+For the complete code, refer to this [example](https://github.com/rudderlabs/rudder-airflow-provider/tree/main/examples).
 
-#### Operator Parameters
+Mandatatory parameters for RudderstackRETLOperator:
+* retl_connection_id: This is the [connection id](https://www.rudderstack.com/docs/sources/reverse-etl/airflow-provider/#where-can-i-find-the-connection-id-for-my-reverse-etl-connection) for the sync job.
+* connection_id: The Airflow connection to use for connecting to the Rudderstack API.	Default value is `rudderstack_default`.
 
-| Parameter | Description | Type | Default |
-| :--- |:--- | :--- | :--- 
-| `source_id` | Valid RudderStack source ID | String | `None` |
-| `task_id` | A unique task ID within a DAG | String | `None` |
-| `wait_for_completion` | If `True`, the task will wait for sync to complete. | Boolean | `False` |
-| `connection_id` | The Airflow connection to use for connecting to the Rudderstack API. | String | `rudderstack_default` |
 
-The RudderStack operator also supports all the parameters supported by the [Airflow base operator](https://airflow.apache.org/docs/apache-airflow/stable/_api/airflow/models/baseoperator/index.html).
+RudderstackRETLOperator exposes other configurable parameters as well. Mostly default values for them would be recommended.
 
-For details on how to run the DAG in Airflow, refer to the [documentation](https://www.rudderstack.com/docs/reverse-etl/features/airflow-provider/#running-the-dag).
+* request_max_retries: The maximum number of times requests to the RudderStack API should be retried before failng.
+* request_retry_delay: Time (in seconds) to wait between each request retry.
+* request_timeout: Time (in seconds) after which the requests to RudderStack are declared timed out.
+* poll_interval: Time (in seconds) for polling status of triggered job.
+* poll_timeout: Time (in seconds) after which the polling for a triggered job is declared timed out.
+* wait_for_completion: Boolean if execution run should poll and wait till completion of sync. Default value is True.
+* sync_type: Type of sync to trigger `incremental` or `full`. Default is None as RudderStack will be deteriming sync type.
 
-### RudderstackRETLOperator
 
-Trigger syncs for RETL connections
+### RudderstackProfilesOperator
+
+RudderstackProfilesOperator can be used to trigger profiles run. A simple DAG for triggering profile runs for a profiles project.
 
 ```python
-with DAG('rudderstack-sample',
+with DAG(
+    "rudderstack-profiles-sample",
     default_args=default_args,
-    description='A simple tutorial DAG',
+    description="A simple tutorial DAG for profiles run.",
     schedule_interval=timedelta(days=1),
     start_date=datetime(2021, 1, 1),
     catchup=False,
-    tags=['rs']) as dag:
-    rs_operator = RudderstackRETLOperator(
-        retl_connection_id='2aiDQzMqP6LNuUokWstmaubcZOP',
-        task_id='retl-test-sync',
-        connection_id='rudder_yeshwanth_dev',
-        sync_type='full',
-        wait_for_completion=True
+    tags=["rs-profiles"],
+) as dag:
+    # profile_id is template field
+    rs_operator = RudderstackProfilesOperator(
+        profile_id="<profile_id>",
+        task_id="<replace task id>",
+        connection_id="<rudderstack api connection id>",
     )
 ```
 
-#### Operator parameters
+Mandatatory parameters for RudderstackProfilesOperator:
+* profile_id: This is the [profiles id](https://www.rudderstack.com/docs/api/profiles-api/#run-project) for the profiles project to run.
+* connection_id: The Airflow connection to use for connecting to the Rudderstack API.	Default value is `rudderstack_default`.
 
-| Parameter | Description | Type | Default |
-| :--- |:--- | :--- | :--- 
-| `retl_connection_id` | Valid RudderStack RETL connection ID | String (templatable) | `None` |
-| `task_id` | A unique task ID within a DAG | String | `None` |
-| `wait_for_completion` | If `True`, the task will wait for sync to complete. | Boolean | `False` |
-| `connection_id` | The Airflow connection to use for connecting to the Rudderstack API. | String | `rudderstack_default` |
-|`sync_type`| Type of sync to trigger | `incremental` or `full` (templatable) | `incremental`|
+RudderstackRETLOperator exposes other configurable parameters as well. Mostly default values for them would be recommended.
 
-
-For details on how to run the DAG in Airflow, refer to the [documentation](https://www.rudderstack.com/docs/reverse-etl/features/airflow-provider/#running-the-dag).
+* request_max_retries: The maximum number of times requests to the RudderStack API should be retried before failng.
+* request_retry_delay: Time (in seconds) to wait between each request retry.
+* request_timeout: Time (in seconds) after which the requests to RudderStack are declared timed out.
+* poll_interval: Time (in seconds) for polling status of triggered job.
+* poll_timeout: Time (in seconds) after which the polling for a triggered job is declared timed out.
+* wait_for_completion: Boolean if execution run should poll and wait till completion of sync. Default value is True.
 
 
 ## Contribute

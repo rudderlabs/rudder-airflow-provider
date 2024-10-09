@@ -1,211 +1,271 @@
-import unittest
-from unittest import mock
+import pytest
+from unittest.mock import patch, MagicMock, ANY
 from airflow.exceptions import AirflowException
-
 from airflow.models.connection import Connection
-from requests.models import Response
-from rudder_airflow_provider.hooks.rudderstack import STATUS_POLL_INTERVAL, RudderstackHook
+from requests.exceptions import RequestException
+from requests.exceptions import Timeout
+from rudder_airflow_provider.hooks.rudderstack import (
+    BaseRudderStackHook,
+    RudderStackRETLHook,
+    RETLSyncStatus,
+    RudderStackProfilesHook,
+    ProfilesRunStatus,
+)
+
+# Mocking constants for testing
+TEST_AIRFLOW_CONN_ID = "airflow_conn_id"
+TEST_RETL_CONN_ID = "test_retl_conn_id"
+TEST_PROFILE_ID = "test_profile_id"
+TEST_RETL_SYNC_RUN_ID = "test_retl_sync_id"
+TEST_PROFILE_RUN_ID = "test_profile_run_id"
+TEST_ACCESS_TOKEN = "test_access_token"
+TEST_BASE_URL = "http://test.rudderstack.api"
 
 
-class RudderstackHookTest(unittest.TestCase):
-
-    @mock.patch('rudder_airflow_provider.hooks.rudderstack.HttpHook.get_connection')
-    def test_get_access_token(self, mocked_http: mock.Mock):
-        rudder_connection = Connection(password='some-password')
-        mocked_http.return_value = rudder_connection
-        hook = RudderstackHook('rudderstack_connection')
-        self.assertEqual(hook.get_access_token(), 'some-password')
-
-    @mock.patch('rudder_airflow_provider.hooks.rudderstack.HttpHook.get_connection')
-    @mock.patch('rudder_airflow_provider.hooks.rudderstack.HttpHook.run')
-    def test_trigger_sync(self, mock_run: mock.Mock, mock_connection: mock.Mock):
-        source_id = 'some-source-id'
-        access_token = 'some-password'
-        hook = RudderstackHook('rudderstack_connection')
-        mock_connection.return_value = Connection(password=access_token)
-        sync_endpoint = f"/v2/sources/{source_id}/start"
-        start_resp = Response()
-        start_resp.json = mock.MagicMock(return_value={'runId': 'some-run-id'})
-        start_resp.status_code = 204
-        mock_run.return_value = start_resp
-        run_id = hook.trigger_sync(source_id)
-        expected_headers = {
-                 'authorization': f"Bearer {access_token}",
-                 'Content-Type': 'application/json'
-                 }
-        mock_run.assert_called_once_with(endpoint=sync_endpoint, headers=expected_headers, extra_options={'check_response': False})
-    
-    @mock.patch('rudder_airflow_provider.hooks.rudderstack.HttpHook.get_connection')
-    @mock.patch('rudder_airflow_provider.hooks.rudderstack.HttpHook.run')
-    def test_trigger_sync_conflict_status(self, mock_run: mock.Mock, mock_connection: mock.Mock):
-        source_id = 'some-source-id'
-        access_token = 'some-password'
-        hook = RudderstackHook('rudderstack_connection')
-        mock_connection.return_value = Connection(password=access_token)
-        sync_endpoint = f"/v2/sources/{source_id}/start"
-        start_resp = Response()
-        start_resp.status_code = 409
-        mock_run.return_value = start_resp
-        run_id = hook.trigger_sync(source_id)
-        self.assertIsNone(run_id)
-        expected_headers = {
-                 'authorization': f"Bearer {access_token}",
-                 'Content-Type': 'application/json'
-                 }
-        mock_run.assert_called_once_with(endpoint=sync_endpoint, headers=expected_headers, extra_options={'check_response': False})
-    
-    @mock.patch('rudder_airflow_provider.hooks.rudderstack.HttpHook.get_connection')
-    @mock.patch('rudder_airflow_provider.hooks.rudderstack.HttpHook.run')
-    def test_trigger_sync_error_status(self, mock_run: mock.Mock, mock_connection: mock.Mock):
-        source_id = 'some-source-id'
-        access_token = 'some-password'
-        hook = RudderstackHook('rudderstack_connection')
-        mock_connection.return_value = Connection(password=access_token)
-        sync_endpoint = f"/v2/sources/{source_id}/start"
-        start_resp = Response()
-        start_resp.status_code = 500
-        mock_run.return_value = start_resp
-        self.assertRaises(AirflowException, hook.trigger_sync, source_id)
-        expected_headers = {
-                 'authorization': f"Bearer {access_token}",
-                 'Content-Type': 'application/json'
-                 }
-        mock_run.assert_called_once_with(endpoint=sync_endpoint, headers=expected_headers, extra_options={'check_response': False})
-
-    @mock.patch('rudder_airflow_provider.hooks.rudderstack.HttpHook.get_connection')
-    @mock.patch('rudder_airflow_provider.hooks.rudderstack.HttpHook.run')
-    def test_triger_sync_exception(self, mock_run: mock.Mock, mock_connection: mock.Mock):
-        source_id = 'some-source-id'
-        access_token = 'some-password'
-        mock_connection.return_value = Connection(password=access_token)
-        mock_run.side_effect = AirflowException()
-        hook = RudderstackHook('rudderstack_connection')
-        self.assertRaises(AirflowException, hook.trigger_sync, source_id)
-
-    @mock.patch('rudder_airflow_provider.hooks.rudderstack.HttpHook.get_connection')
-    @mock.patch('rudder_airflow_provider.hooks.rudderstack.HttpHook.run')
-    def test_poll_status(self, mock_run: mock.Mock, mock_connection: mock.Mock):
-        source_id = 'some-source-id'
-        run_id = 'some-run-id'
-        access_token = 'some-password'
-        status_endpoint = f"/v2/sources/{source_id}/runs/{run_id}/status"
-        finished_status_response = Response()
-        finished_status_response.status_code = 200
-        finished_status_response.json = mock.MagicMock(return_value={'status': 'finished'})
-        mock_run.return_value = finished_status_response
-        mock_connection.return_value = Connection(password=access_token)
-        hook = RudderstackHook('rudderstack_connection')
-        hook.poll_for_status(source_id, run_id)
-        expected_headers = {
-                 'authorization': f"Bearer {access_token}",
-                 'Content-Type': 'application/json'
-                 }
-        mock_run.assert_called_once_with(endpoint=status_endpoint, headers=expected_headers)
-
-    @mock.patch('rudder_airflow_provider.hooks.rudderstack.HttpHook.get_connection')
-    @mock.patch('rudder_airflow_provider.hooks.rudderstack.HttpHook.run')
-    def test_poll_status_failure(self, mock_run: mock.Mock, mock_connection: mock.Mock):
-        source_id = 'some-source-id'
-        run_id = 'some-run-id'
-        access_token = 'some-password'
-        status_endpoint = f"/v2/sources/{source_id}/runs/{run_id}/status"
-        finished_status_response = Response()
-        finished_status_response.status_code = 200
-        finished_status_response.json = mock.MagicMock(
-            return_value={'status': 'finished', 'error': 'some-eror'})
-        mock_run.return_value = finished_status_response
-        mock_connection.return_value = Connection(password=access_token)
-        hook = RudderstackHook('rudderstack_connection')
-        self.assertRaises(AirflowException, hook.poll_for_status, source_id, run_id)
-        expected_headers = {
-                 'authorization': f"Bearer {access_token}",
-                 'Content-Type': 'application/json'
-                 }
-        mock_run.assert_called_once_with(endpoint=status_endpoint, headers=expected_headers)
-
-    @mock.patch('rudder_airflow_provider.hooks.rudderstack.HttpHook.get_connection')
-    @mock.patch('rudder_airflow_provider.hooks.rudderstack.requests.post')
-    def test_retl_trigger_sync(self, mock_post: mock.Mock, mock_connection: mock.Mock):
-        mock_post.return_value.status_code = 200
-        mock_post.return_value.json.return_value = {'syncId': 'some-sync-id'}
-        mock_connection.side_effect = [Connection(password='some-password', host='https://some-url.com'), Connection(password='some-password')]
-        retl_connection_id = 'some-connection-id'
-        sync_type = 'full'
-        base_url = 'https://some-url.com'
-        retl_sync_endpoint = f"/v2/retl-connections/{retl_connection_id}/start"
-        hook = RudderstackHook('rudderstack_connection')
-        sync_id = hook.trigger_retl_sync(retl_connection_id, sync_type)
-        self.assertEqual(sync_id, 'some-sync-id')
-        mock_post.assert_called_once_with(f"{base_url}{retl_sync_endpoint}", json={'syncType': sync_type},
-                                          headers={'authorization' : f"Bearer some-password", 'Content-Type': 'application/json'})
-        mock_connection.assert_called_with('rudderstack_connection')
-
-    # test 409 retl trigger sync and expect AirflowException
-    @mock.patch('rudder_airflow_provider.hooks.rudderstack.HttpHook.get_connection')
-    @mock.patch('rudder_airflow_provider.hooks.rudderstack.requests.post')
-    def test_retl_trigger_sync_conflict(self, mock_post: mock.Mock, mock_connection: mock.Mock):
-        mock_post.return_value.status_code = 409
-        mock_connection.side_effect = [Connection(password='some-password', host='https://some-url.com'), Connection(password='some-password')]
-        retl_connection_id = 'some-connection-id'
-        sync_type = 'full'
-        base_url = 'https://some-url.com'
-        retl_sync_endpoint = f"/v2/retl-connections/{retl_connection_id}/start"
-        hook = RudderstackHook('rudderstack_connection')
-        self.assertRaises(AirflowException, hook.trigger_retl_sync, retl_connection_id, sync_type)
-        mock_post.assert_called_once_with(f"{base_url}{retl_sync_endpoint}", json={'syncType': sync_type},
-                                          headers={'authorization' : f"Bearer some-password", 'Content-Type': 'application/json'})
-        mock_connection.assert_called_with('rudderstack_connection')
-
-    @mock.patch('rudder_airflow_provider.hooks.rudderstack.HttpHook.get_connection')
-    @mock.patch('rudder_airflow_provider.hooks.rudderstack.requests.get')
-    def test_poll_for_retl_sync_status(self, mock_get: mock.Mock, mock_connection: mock.Mock):
-        mock_get.return_value.status_code = 200
-        mock_get.return_value.json.return_value = {'status': 'succeeded'}
-        mock_connection.side_effect = [Connection(password='some-password', host='https://some-url.com'), Connection(password='some-password')]
-        retl_connection_id = 'some-connection-id'
-        sync_id = 'some-sync-id'
-        base_url = 'https://some-url.com'
-        retl_sync_status_endpoint = f"/v2/retl-connections/{retl_connection_id}/syncs/{sync_id}"
-        hook = RudderstackHook('rudderstack_connection')
-        hook.poll_retl_sync_status(retl_connection_id, sync_id)
-        mock_get.assert_called_once_with(f"{base_url}{retl_sync_status_endpoint}", headers={'authorization' : f"Bearer some-password", 'Content-Type': 'application/json'})
-        mock_connection.assert_called_with('rudderstack_connection')
-    
-
-    @mock.patch('rudder_airflow_provider.hooks.rudderstack.HttpHook.get_connection')
-    @mock.patch('rudder_airflow_provider.hooks.rudderstack.requests.get')
-    def test_poll_for_retl_sync_status_failed(self, mock_get: mock.Mock, mock_connection: mock.Mock):
-        mock_get.return_value.status_code = 200
-        mock_get.return_value.json.return_value = {'status': 'failed'}
-        mock_connection.side_effect = [Connection(password='some-password', host='https://some-url.com'), Connection(password='some-password')]
-        retl_connection_id = 'some-connection-id'
-        sync_id = 'some-sync-id'
-        base_url = 'https://some-url.com'
-        retl_sync_status_endpoint = f"/v2/retl-connections/{retl_connection_id}/syncs/{sync_id}"
-        hook = RudderstackHook('rudderstack_connection')
-        self.assertRaises(AirflowException, hook.poll_retl_sync_status, retl_connection_id, sync_id)
-        mock_get.assert_called_once_with(f"{base_url}{retl_sync_status_endpoint}", headers={'authorization' : f"Bearer some-password", 'Content-Type': 'application/json'})
-        mock_connection.assert_called_with('rudderstack_connection')
-
-    @mock.patch('rudder_airflow_provider.hooks.rudderstack.HttpHook.get_connection')
-    @mock.patch('rudder_airflow_provider.hooks.rudderstack.requests.get')
-    @mock.patch('rudder_airflow_provider.hooks.rudderstack.time.sleep')
-    def test_poll_for_retl_sync_status_running(self, mock_sleep: mock.Mock, mock_get: mock.Mock, mock_connection: mock.Mock):
-        mock_get.return_value.status_code = 200
-        mock_get.return_value.json.side_effect = [{'status': 'running'}, {'status': 'succeeded'}]
-        mock_connection.side_effect = [Connection(password='some-password', host='https://some-url.com'), Connection(password='some-password')]
-        retl_connection_id = 'some-connection-id'
-        sync_id = 'some-sync-id'
-        base_url = 'https://some-url.com'
-        retl_sync_status_endpoint = f"/v2/retl-connections/{retl_connection_id}/syncs/{sync_id}"
-        hook = RudderstackHook('rudderstack_connection')
-        hook.poll_retl_sync_status(retl_connection_id, sync_id)
-        mock_get.assert_called_with(f"{base_url}{retl_sync_status_endpoint}", headers={'authorization' : f"Bearer some-password", 'Content-Type': 'application/json'})
-        mock_connection.assert_called_with('rudderstack_connection')
-        self.assertEqual(mock_get.call_count, 2)
-        self.assertEqual(mock_sleep.call_count, 1)
-        mock_sleep.assert_called_with(STATUS_POLL_INTERVAL)    
+# Mocking connection and responses
+@pytest.fixture
+def airflow_connection():
+    return Connection(
+        conn_id=TEST_AIRFLOW_CONN_ID, host=TEST_BASE_URL, password=TEST_ACCESS_TOKEN
+    )
 
 
-if __name__ == '__main__':
-    unittest.main()
+# BaseRudderStackHook tests
+@patch("airflow.providers.http.hooks.http.HttpHook.get_connection")
+def test_get_access_token(mock_connection, airflow_connection):
+    basehook = BaseRudderStackHook(TEST_AIRFLOW_CONN_ID)
+    mock_connection.return_value = airflow_connection
+    assert basehook._get_access_token() == TEST_ACCESS_TOKEN
+
+
+@patch("airflow.providers.http.hooks.http.HttpHook.get_connection")
+def test_get_api_base_url(mock_connection, airflow_connection):
+    mock_connection.return_value = airflow_connection
+    basehook = BaseRudderStackHook(TEST_AIRFLOW_CONN_ID)
+    assert basehook._get_api_base_url() == TEST_BASE_URL
+
+
+@patch("airflow.providers.http.hooks.http.HttpHook.get_connection")
+def test_get_request_headers(mock_connection, airflow_connection):
+    mock_connection.return_value = airflow_connection
+    basehook = BaseRudderStackHook(TEST_AIRFLOW_CONN_ID)
+    headers = basehook._get_request_headers()
+    assert headers["authorization"] == f"Bearer {TEST_ACCESS_TOKEN}"
+    assert headers["Content-Type"] == "application/json"
+
+
+@patch("airflow.providers.http.hooks.http.HttpHook.get_connection")
+@patch("requests.request")
+def test_make_request_success(mock_request, mock_connection, airflow_connection):
+    mock_request.return_value = MagicMock(
+        status_code=200, json=lambda: {"result": "success"}
+    )
+    mock_connection.return_value = airflow_connection
+    basehook = BaseRudderStackHook(TEST_AIRFLOW_CONN_ID)
+    result = basehook.make_request("/endpoint", method="GET")
+    assert result == {"result": "success"}
+    mock_request.assert_called_once_with(
+        method="GET",
+        url=TEST_BASE_URL + "/endpoint",
+        headers=ANY,
+        timeout=30,
+    )
+
+
+@patch("airflow.providers.http.hooks.http.HttpHook.get_connection")
+@patch("requests.request")
+def test_make_request_failure(mock_request, mock_connection, airflow_connection):
+    mock_request.side_effect = RequestException("Request failed")
+    mock_connection.return_value = airflow_connection
+    basehook = BaseRudderStackHook(TEST_AIRFLOW_CONN_ID)
+
+    with pytest.raises(AirflowException, match="Exceeded max number of retries"):
+        basehook.make_request("/endpoint")
+    assert mock_request.call_count == 4
+
+
+@patch("airflow.providers.http.hooks.http.HttpHook.get_connection")
+@patch("requests.request")
+def test_make_request_success_after_retry(
+    mock_request, mock_connection, airflow_connection
+):
+    mock_request.side_effect = [
+        Timeout(),
+        Timeout(),
+        MagicMock(status_code=200, json=lambda: {"result": "success"}),
+    ]
+    mock_connection.return_value = airflow_connection
+    basehook = BaseRudderStackHook(TEST_AIRFLOW_CONN_ID)
+    response = basehook.make_request(endpoint="/test-endpoint", method="GET")
+    assert response == {"result": "success"}
+    assert mock_request.call_count == 3
+
+
+# RudderStackRETLHook tests
+@patch("airflow.providers.http.hooks.http.HttpHook.get_connection")
+@patch("requests.request")
+def test_start_sync(mock_request, mock_connection, airflow_connection):
+    mock_request.return_value = MagicMock(
+        status_code=200, json=lambda: {"syncId": TEST_RETL_SYNC_RUN_ID}
+    )
+    mock_connection.return_value = airflow_connection
+    retl_hook = RudderStackRETLHook(TEST_AIRFLOW_CONN_ID)
+    sync_id = retl_hook.start_sync(TEST_RETL_CONN_ID)
+    assert sync_id == TEST_RETL_SYNC_RUN_ID
+
+    mock_request.assert_called_once_with(
+        method="POST",
+        url=f"{TEST_BASE_URL}/v2/retl-connections/{TEST_RETL_CONN_ID}/start",
+        headers=ANY,
+        timeout=30,
+        json={},
+    )
+
+
+@patch("airflow.providers.http.hooks.http.HttpHook.get_connection")
+def test_start_sync_invalid_parameters(mock_connection, airflow_connection):
+    mock_connection.return_value = airflow_connection
+    retl_hook = RudderStackRETLHook(TEST_AIRFLOW_CONN_ID)
+    with pytest.raises(AirflowException, match="Invalid sync type: invalid_sync_type"):
+        retl_hook.start_sync(TEST_RETL_CONN_ID, "invalid_sync_type")
+
+    with pytest.raises(AirflowException, match="retl_connection_id is required"):
+        retl_hook.start_sync("")
+
+
+@patch("airflow.providers.http.hooks.http.HttpHook.get_connection")
+@patch("requests.request")
+def test_poll_sync_success(mock_request, mock_connection, airflow_connection):
+    mock_request.side_effect = [
+        MagicMock(
+            status_code=200,
+            json=lambda: {
+                "id": TEST_RETL_SYNC_RUN_ID,
+                "status": RETLSyncStatus.RUNNING,
+            },
+        ),
+        MagicMock(
+            status_code=200,
+            json=lambda: {
+                "id": TEST_RETL_SYNC_RUN_ID,
+                "status": RETLSyncStatus.SUCCEEDED,
+            },
+        ),
+    ]
+    mock_connection.return_value = airflow_connection
+    retl_hook = RudderStackRETLHook(
+        connection_id=TEST_AIRFLOW_CONN_ID, poll_interval=0.1
+    )
+    result = retl_hook.poll_sync(TEST_RETL_CONN_ID, TEST_RETL_SYNC_RUN_ID)
+    assert mock_request.call_count == 2
+    mock_request.assert_called_with(
+        method="GET",
+        url=f"{TEST_BASE_URL}/v2/retl-connections/{TEST_RETL_CONN_ID}/syncs/{TEST_RETL_SYNC_RUN_ID}",
+        headers=ANY,
+        timeout=30,
+    )
+    assert result == {"id": TEST_RETL_SYNC_RUN_ID, "status": RETLSyncStatus.SUCCEEDED}
+
+
+@patch("airflow.providers.http.hooks.http.HttpHook.get_connection")
+@patch("requests.request")
+def test_poll_sync_timeout(mock_request, mock_connection, airflow_connection):
+    mock_request.return_value = MagicMock(
+        status_code=200,
+        json=lambda: {"id": TEST_RETL_SYNC_RUN_ID, "status": RETLSyncStatus.RUNNING},
+    )
+    mock_connection.return_value = airflow_connection
+    retl_hook = RudderStackRETLHook(
+        connection_id=TEST_AIRFLOW_CONN_ID, poll_interval=0.1, poll_timeout=0.3
+    )
+    with pytest.raises(
+        AirflowException,
+        match="Polling for syncId: test_retl_sync_id for retl connection: test_retl_conn_id timed out",
+    ):
+        retl_hook.poll_sync(TEST_RETL_CONN_ID, TEST_RETL_SYNC_RUN_ID)
+    assert mock_request.call_count <= 4
+
+
+# RudderStackProfilesHook tests
+@patch("airflow.providers.http.hooks.http.HttpHook.get_connection")
+@patch("requests.request")
+def test_start_profile_run(mock_request, mock_connection, airflow_connection):
+    mock_request.return_value = MagicMock(
+        status_code=200, json=lambda: {"runId": TEST_PROFILE_RUN_ID}
+    )
+    mock_connection.return_value = airflow_connection
+    profiles_hook = RudderStackProfilesHook(TEST_AIRFLOW_CONN_ID)
+    run_id = profiles_hook.start_profile_run(TEST_PROFILE_ID)
+    assert run_id == TEST_PROFILE_RUN_ID
+    mock_request.assert_called_once_with(
+        method="POST",
+        url=f"{TEST_BASE_URL}/v2/sources/{TEST_PROFILE_ID}/start",
+        headers=ANY,
+        timeout=30,
+    )
+
+
+@patch("airflow.providers.http.hooks.http.HttpHook.get_connection")
+def test_start_sprofile_run_invalid_parameters(mock_connection, airflow_connection):
+    mock_connection.return_value = airflow_connection
+    profiles_hook = RudderStackProfilesHook(TEST_PROFILE_ID)
+    with pytest.raises(
+        AirflowException, match="profile_id is required to start a profile run"
+    ):
+        profiles_hook.start_profile_run("")
+
+
+@patch("airflow.providers.http.hooks.http.HttpHook.get_connection")
+@patch("requests.request")
+def test_poll_profile_run_success(mock_request, mock_connection, airflow_connection):
+    mock_request.side_effect = [
+        MagicMock(
+            status_code=200,
+            json=lambda: {
+                "id": TEST_PROFILE_RUN_ID,
+                "status": ProfilesRunStatus.RUNNING,
+            },
+        ),
+        MagicMock(
+            status_code=200,
+            json=lambda: {
+                "id": TEST_PROFILE_RUN_ID,
+                "status": ProfilesRunStatus.FINISHED,
+            },
+        ),
+    ]
+    mock_connection.return_value = airflow_connection
+    profiles_hook = RudderStackProfilesHook(
+        connection_id=TEST_AIRFLOW_CONN_ID, poll_interval=0.1
+    )
+    result = profiles_hook.poll_profile_run(TEST_PROFILE_ID, TEST_PROFILE_RUN_ID)
+    assert mock_request.call_count == 2
+    mock_request.assert_called_with(
+        method="GET",
+        url=f"{TEST_BASE_URL}/v2/sources/{TEST_PROFILE_ID}/runs/{TEST_PROFILE_RUN_ID}/status",
+        headers=ANY,
+        timeout=30,
+    )
+    assert result == {"id": TEST_PROFILE_RUN_ID, "status": ProfilesRunStatus.FINISHED}
+
+
+@patch("airflow.providers.http.hooks.http.HttpHook.get_connection")
+@patch("requests.request")
+def test_poll_profile_run_timeout(mock_request, mock_connection, airflow_connection):
+    mock_request.return_value = MagicMock(
+        status_code=200,
+        json=lambda: {"id": TEST_PROFILE_RUN_ID, "status": ProfilesRunStatus.RUNNING},
+    )
+    mock_connection.return_value = airflow_connection
+    profiles_hook = RudderStackProfilesHook(
+        connection_id=TEST_AIRFLOW_CONN_ID, poll_interval=0.1, poll_timeout=0.3
+    )
+    with pytest.raises(
+        AirflowException,
+        match="Polling for runId: test_profile_run_id for profile: test_profile_id timed out",
+    ):
+        profiles_hook.poll_profile_run(TEST_PROFILE_ID, TEST_PROFILE_RUN_ID)
+    assert mock_request.call_count <= 4
+
+if __name__ == "__main__":
+    pytest.main()

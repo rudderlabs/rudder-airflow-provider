@@ -1,3 +1,6 @@
 .PHONY: test
 test:
-	python3 -m unittest discover -s rudder_airflow_provider/test 
+	pytest --cov=rudder_airflow_provider rudder_airflow_provider/test --cov-report=xml
+
+lint:
+	ruff check rudder_airflow_provider/*.py
