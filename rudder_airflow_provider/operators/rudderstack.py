@@ -1,6 +1,6 @@
 import logging
 from airflow.models import baseoperator
-from typing import Optional
+from typing import Optional, List
 from rudder_airflow_provider.hooks.rudderstack import (
     RudderStackRETLHook,
     RudderStackProfilesHook,
@@ -69,7 +69,7 @@ class RudderstackRETLOperator(baseoperator.BaseOperator):
 
 
 class RudderstackProfilesOperator(baseoperator.BaseOperator):
-    template_fields = "profile_id"
+    template_fields = ("profile_id", "parameters")
 
     """
         Rudderstack operator for Profiles
@@ -87,6 +87,7 @@ class RudderstackProfilesOperator(baseoperator.BaseOperator):
         request_max_retries: int = DEFAULT_REQUEST_MAX_RETRIES,
         poll_timeout: float = None,
         poll_interval: float = DEFAULT_POLL_INTERVAL_SECONDS,
+        parameters: Optional[List[str]] = None,
         **kwargs,
     ):
         """
@@ -101,6 +102,7 @@ class RudderstackProfilesOperator(baseoperator.BaseOperator):
         self.request_max_retries = request_max_retries
         self.poll_timeout = poll_timeout
         self.poll_interval = poll_interval
+        self.parameters = parameters
 
     def execute(self, context):
         rs_profiles_hook = RudderStackProfilesHook(
@@ -111,7 +113,7 @@ class RudderstackProfilesOperator(baseoperator.BaseOperator):
             poll_timeout=self.poll_timeout,
             poll_interval=self.poll_interval,
         )
-        profile_run_id = rs_profiles_hook.start_profile_run(self.profile_id)
+        profile_run_id = rs_profiles_hook.start_profile_run(self.profile_id, self.parameters)
         if self.wait_for_completion:
             self.log.info(
                 f"Poll and wait for profiles run to finish for profilesId: {self.profile_id}, runId: {profile_run_id}"

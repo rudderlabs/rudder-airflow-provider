@@ -2,7 +2,7 @@ import logging
 import time
 import datetime
 from importlib.metadata import PackageNotFoundError, version
-from typing import Any, Dict, Mapping, Optional
+from typing import Any, Dict, Mapping, Optional, List
 from urllib.parse import urljoin
 from airflow.exceptions import AirflowException
 from airflow.providers.http.hooks.http import HttpHook
@@ -247,7 +247,7 @@ class RudderStackProfilesHook(BaseRudderStackHook):
         self.poll_timeout = poll_timeout
         self.poll_interval = poll_interval
 
-    def start_profile_run(self, profile_id: str):
+    def start_profile_run(self, profile_id: str, parameters: Optional[List[str]] = None) -> str:
         """Triggers a profile run and returns runId if successful, else raises Failure.
 
         Args:
@@ -258,6 +258,7 @@ class RudderStackProfilesHook(BaseRudderStackHook):
         self.log.info(f"Triggering profile run for profile id: {profile_id}")
         return self.make_request(
             endpoint=f"/v2/sources/{profile_id}/start",
+            data={"parameters": parameters} if parameters else None,
         )["runId"]
 
     def poll_profile_run(self, profile_id: str, run_id: str) -> Dict[str, Any]:

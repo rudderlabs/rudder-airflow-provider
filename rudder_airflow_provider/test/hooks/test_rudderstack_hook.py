@@ -204,6 +204,24 @@ def test_start_profile_run(mock_request, mock_connection, airflow_connection):
         timeout=30,
     )
 
+# RudderStackProfilesHook tests
+@patch("airflow.providers.http.hooks.http.HttpHook.get_connection")
+@patch("requests.request")
+def test_start_profile_run_parameters(mock_request, mock_connection, airflow_connection):
+    mock_request.return_value = MagicMock(
+        status_code=200, json=lambda: {"runId": TEST_PROFILE_RUN_ID}
+    )
+    mock_connection.return_value = airflow_connection
+    profiles_hook = RudderStackProfilesHook(TEST_AIRFLOW_CONN_ID)
+    run_id = profiles_hook.start_profile_run(TEST_PROFILE_ID, ["--rebase_incremental"])
+    assert run_id == TEST_PROFILE_RUN_ID
+    mock_request.assert_called_once_with(
+        method="POST",
+        url=f"{TEST_BASE_URL}/v2/sources/{TEST_PROFILE_ID}/start",
+        json={'parameters': ['--rebase_incremental']},
+        headers=ANY,
+        timeout=30,
+    )
 
 @patch("airflow.providers.http.hooks.http.HttpHook.get_connection")
 def test_start_sprofile_run_invalid_parameters(mock_connection, airflow_connection):

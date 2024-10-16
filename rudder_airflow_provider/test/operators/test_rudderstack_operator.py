@@ -58,7 +58,7 @@ def test_profiles_operator_execute_without_wait(mock_profile_run, mock_poll_prof
                                        wait_for_completion=False,
                                        task_id='some-task-id')
     profiles_operator.execute(context=None)
-    mock_profile_run.assert_called_once_with(TEST_PROFILE_ID)
+    mock_profile_run.assert_called_once_with(TEST_PROFILE_ID, None)
     mock_poll_profile_run.assert_not_called()
 
 
@@ -77,7 +77,7 @@ def test_profiles_operator_execute_with_wait(mock_profile_run, mock_poll_profile
                                        task_id='some-task-id')
     profiles_operator.execute(context=None)
 
-    mock_profile_run.assert_called_once_with(TEST_PROFILE_ID)
+    mock_profile_run.assert_called_once_with(TEST_PROFILE_ID, None)
     mock_poll_profile_run.assert_called_once_with(TEST_PROFILE_ID, TEST_PROFILES_RUN_ID)
 
 if __name__ == "__main__":
