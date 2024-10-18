@@ -98,7 +98,7 @@ Mandatatory parameters for RudderstackProfilesOperator:
 * profile_id: This is the [profiles id](https://www.rudderstack.com/docs/api/profiles-api/#run-project) for the profiles project to run.
 * connection_id: The Airflow connection to use for connecting to the Rudderstack API.	Default value is `rudderstack_default`.
 
-RudderstackRETLOperator exposes other configurable parameters as well. Mostly default values for them would be recommended.
+RudderstackProfilesOperator exposes other configurable parameters as well. Mostly default values for them would be recommended.
 
 * request_max_retries: The maximum number of times requests to the RudderStack API should be retried before failng.
 * request_retry_delay: Time (in seconds) to wait between each request retry.
@@ -106,6 +106,7 @@ RudderstackRETLOperator exposes other configurable parameters as well. Mostly de
 * poll_interval: Time (in seconds) for polling status of triggered job.
 * poll_timeout: Time (in seconds) after which the polling for a triggered job is declared timed out.
 * wait_for_completion: Boolean if execution run should poll and wait till completion of sync. Default value is True.
+* parameters: Additional parameters to pass to the profiles run command, as supported by the API endpoint. Default value is `None`.
 
 
 ## Contribute
