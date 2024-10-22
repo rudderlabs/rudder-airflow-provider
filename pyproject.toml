@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "rudderstack-airflow-provider"
-version = "2.0.1"
+version = "2.1.0"
 readme = "README.md"
 license = {file = "LICENSE"}
 description = "Apache airflow provider for managing Reverse ETL syncs and Profiles runs in RudderStack."
