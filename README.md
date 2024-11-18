@@ -18,7 +18,8 @@
 
 # RudderStack Airflow Provider
 
-The [RudderStack](https://rudderstack.com) Airflow Provider lets you programmatically schedule and trigger your [Reverse ETL](https://www.rudderstack.com/docs/reverse-etl) syncs and Profiles runs outside RudderStack and integrate them with your existing Airflow workflows.
+The [RudderStack](https://rudderstack.com) Airflow Provider lets you programmatically schedule and trigger your [Reverse ETL](https://www.rudderstack.com/docs/reverse-etl) syncs and [Profiles](https://www.rudderstack.com/docs/profiles/overview/) runs outside RudderStack and integrate them with your existing Airflow workflows.
+Refer to [orchestration docs](https://www.rudderstack.com/docs/data-pipelines/orchestration/airflow/).
 
 
 ## Installation
@@ -49,7 +50,7 @@ with DAG(
     # retl_connection_id, sync_type are template fields
     rs_operator = RudderstackRETLOperator(
         retl_connection_id="connection_id",
-        task_id="<replace task id>",
+        task_id="<a unique, meaningful id for the airflow task>",
         connection_id="<rudderstack api airflow connection id>"
     )
 ```
@@ -57,7 +58,7 @@ with DAG(
 For the complete code, refer to this [example](https://github.com/rudderlabs/rudder-airflow-provider/tree/main/examples).
 
 Mandatatory parameters for RudderstackRETLOperator:
-* retl_connection_id: This is the [connection id](https://www.rudderstack.com/docs/sources/reverse-etl/airflow-provider/#where-can-i-find-the-connection-id-for-my-reverse-etl-connection) for the sync job.
+* retl_connection_id: This is the [connection id](https://www.rudderstack.com/docs/data-pipelines/orchestration/airflow/#where-can-i-find-the-connection-id-for-my-reverse-etl-connection) for the sync job.
 * connection_id: The Airflow connection to use for connecting to the Rudderstack API.	Default value is `rudderstack_default`.
 
 
@@ -89,13 +90,13 @@ with DAG(
     # profile_id is template field
     rs_operator = RudderstackProfilesOperator(
         profile_id="<profile_id>",
-        task_id="<replace task id>",
+        task_id="<a unique, meaningful id for the airflow task",
         connection_id="<rudderstack api connection id>",
     )
 ```
 
 Mandatatory parameters for RudderstackProfilesOperator:
-* profile_id: This is the [profiles id](https://www.rudderstack.com/docs/api/profiles-api/#run-project) for the profiles project to run.
+* profile_id: This is the [profiles id](https://www.rudderstack.com/docs/data-pipelines/orchestration/airflow/#where-can-i-find-my-profiles-project-id) for the profiles project to run.
 * connection_id: The Airflow connection to use for connecting to the Rudderstack API.	Default value is `rudderstack_default`.
 
 RudderstackProfilesOperator exposes other configurable parameters as well. Mostly default values for them would be recommended.
