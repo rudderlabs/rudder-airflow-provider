@@ -26,7 +26,7 @@ with DAG(
     # profile_id is template field
     rs_operator = RudderstackProfilesOperator(
         profile_id="{{ var.value.profile_id }}",
-        task_id="<replace task id>",
+        task_id="<a unique, meaningful id for the airflow task",
         connection_id="<rudderstack api connection id>",
     )
 
