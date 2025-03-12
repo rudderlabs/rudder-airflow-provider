@@ -387,3 +387,4 @@ def test_poll_etl_sync_timeout(mock_request, mock_connection, airflow_connection
 
 if __name__ == "__main__":
     pytest.main()
+
