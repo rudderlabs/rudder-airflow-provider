@@ -1,4 +1,3 @@
-import logging
 import time
 import datetime
 from importlib.metadata import PackageNotFoundError, version
@@ -27,6 +26,11 @@ class RETLSyncType:
 
 
 class ProfilesRunStatus:
+    RUNNING = "running"
+    FINISHED = "finished"
+    FAILED = "failed"
+
+class ETLRunStatus:
     RUNNING = "running"
     FINISHED = "finished"
     FAILED = "failed"
@@ -184,6 +188,7 @@ class RudderStackRETLHook(BaseRudderStackHook):
         Args:
             retl_connection_id (str): connetionId for an RETL sync.
             sync_type (str): (optional) full or incremental. Default is None.
+            sync_id (str): sync run ID.
         Returns:
             Dict[str, Any]: Parsed json output from syncs endpoint.
         """
@@ -225,7 +230,7 @@ class RudderStackRETLHook(BaseRudderStackHook):
 
 class RudderStackProfilesHook(BaseRudderStackHook):
     """
-    RudderStackRETLHook to interact with RudderStack RETL API.
+    RudderStackProfilesHook to interact with RudderStack Profiles API.
     :params connection_id: `Conn ID` of the Connection to be used to configure this hook.
     :params request_retry_delay: Time (in seconds) to wait between each request retry..
     :params request_timeout: Time (in seconds) after which the requests to RudderStack are declared timed out.
@@ -300,5 +305,85 @@ class RudderStackProfilesHook(BaseRudderStackHook):
             ):
                 raise AirflowException(
                     f"Polling for runId: {run_id} for profile: {profile_id} timed out"
+                )
+            time.sleep(self.poll_interval)
+
+class RudderStackETLHook(BaseRudderStackHook):
+    """
+    RudderStackETLHook to interact with RudderStack ETL API.
+    :params connection_id: `Conn ID` of the Connection to be used to configure this hook.
+    :params request_retry_delay: Time (in seconds) to wait between each request retry.
+    :params request_timeout: Time (in seconds) after which the requests to RudderStack are declared timed out.
+    :params request_max_retries: The maximum number of times requests to the RudderStack API should be retried before failing.
+    """
+
+    def __init__(
+        self,
+        connection_id: str,
+        request_retry_delay: int = DEFAULT_RETRY_DELAY,
+        request_timeout: int = DEFAULT_REQUEST_TIMEOUT,
+        request_max_retries: int = DEFAULT_REQUEST_MAX_RETRIES,
+        poll_timeout: float = None,
+        poll_interval: float = DEFAULT_POLL_INTERVAL_SECONDS,
+    ) -> None:
+        super().__init__(
+            connection_id, request_retry_delay, request_timeout, request_max_retries
+        )
+        self.poll_timeout = poll_timeout
+        self.poll_interval = poll_interval
+
+    def start_sync(self, source_id: str) -> str:
+        """Triggers a sync run and returns runId if successful, else raises Failure.
+
+        Args:
+            source_id (str): ETL source ID
+        """
+        if not source_id:
+            raise AirflowException("source_id is required to start an ETL sync")
+        self.log.info(f"Triggering sync run for source id: {source_id}")
+        return self.make_request(
+            endpoint=f"/v2/sources/{source_id}/start",
+            data=None,
+        )["runId"]
+
+    def poll_sync(self, source_id: str, run_id: str) -> Dict[str, Any]:
+        """Polls for completion of a sync run. If poll_timeout is set, raises Failure after timeout.
+
+        Args:
+            source_id (str): ETL source ID.
+            run_id (str): sync run ID.
+        Returns:
+            Dict[str, Any]: Parsed json output from sync run endpoint.
+        """
+        if not source_id:
+            raise AirflowException("source_id is required to start a sync run")
+        if not run_id:
+            raise AirflowException("run_id is required to poll status of sync run")
+
+        status_endpoint = f"/v2/sources/{source_id}/runs/{run_id}/status"
+        poll_start = datetime.datetime.now()
+        while True:
+            resp = self.make_request(endpoint=status_endpoint, method="GET")
+            run_status = resp["status"]
+            self.log.info(
+                f"Polled status for runId: {run_id} for source: {source_id}, status: {run_status}"
+            )
+            if run_status == ETLRunStatus.FINISHED:
+                self.log.info(
+                    f"Sync run finished for source: {source_id}, runId: {run_id}"
+                )
+                return resp
+            elif run_status == ETLRunStatus.FAILED:
+                error_msg = resp.get("error", None)
+                raise AirflowException(
+                    f"Sync run for source: {source_id}, runId: {run_id} failed with error: {error_msg}"
+                )
+            if (
+                self.poll_timeout
+                and datetime.datetime.now()
+                > poll_start + datetime.timedelta(seconds=self.poll_timeout)
+            ):
+                raise AirflowException(
+                    f"Polling for runId: {run_id} for source: {source_id} timed out"
                 )
             time.sleep(self.poll_interval)

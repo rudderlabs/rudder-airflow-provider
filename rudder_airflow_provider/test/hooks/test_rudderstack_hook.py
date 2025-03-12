@@ -6,10 +6,12 @@ from requests.exceptions import RequestException
 from requests.exceptions import Timeout
 from rudder_airflow_provider.hooks.rudderstack import (
     BaseRudderStackHook,
+    RudderStackETLHook,
     RudderStackRETLHook,
     RETLSyncStatus,
     RudderStackProfilesHook,
     ProfilesRunStatus,
+    ETLRunStatus
 )
 
 # Mocking constants for testing
@@ -18,6 +20,8 @@ TEST_RETL_CONN_ID = "test_retl_conn_id"
 TEST_PROFILE_ID = "test_profile_id"
 TEST_RETL_SYNC_RUN_ID = "test_retl_sync_id"
 TEST_PROFILE_RUN_ID = "test_profile_run_id"
+TEST_ETL_SOURCE_ID = "test_etl_src_id"
+TEST_ETL_SYNC_RUN_ID = "test_etl_sync_id"
 TEST_ACCESS_TOKEN = "test_access_token"
 TEST_BASE_URL = "http://test.rudderstack.api"
 
@@ -204,7 +208,6 @@ def test_start_profile_run(mock_request, mock_connection, airflow_connection):
         timeout=30,
     )
 
-# RudderStackProfilesHook tests
 @patch("airflow.providers.http.hooks.http.HttpHook.get_connection")
 @patch("requests.request")
 def test_start_profile_run_parameters(mock_request, mock_connection, airflow_connection):
@@ -224,7 +227,7 @@ def test_start_profile_run_parameters(mock_request, mock_connection, airflow_con
     )
 
 @patch("airflow.providers.http.hooks.http.HttpHook.get_connection")
-def test_start_sprofile_run_invalid_parameters(mock_connection, airflow_connection):
+def test_start_profile_run_invalid_parameters(mock_connection, airflow_connection):
     mock_connection.return_value = airflow_connection
     profiles_hook = RudderStackProfilesHook(TEST_PROFILE_ID)
     with pytest.raises(
@@ -283,6 +286,103 @@ def test_poll_profile_run_timeout(mock_request, mock_connection, airflow_connect
         match="Polling for runId: test_profile_run_id for profile: test_profile_id timed out",
     ):
         profiles_hook.poll_profile_run(TEST_PROFILE_ID, TEST_PROFILE_RUN_ID)
+    assert mock_request.call_count <= 4
+
+
+#RudderStackETLHook tests
+@patch("airflow.providers.http.hooks.http.HttpHook.get_connection")
+@patch("requests.request")
+def test_etl_start_sync(mock_request, mock_connection, airflow_connection):
+    mock_request.return_value = MagicMock(status_code=200, json=lambda: {"runId": TEST_ETL_SYNC_RUN_ID})
+    mock_connection.return_value =airflow_connection
+    
+    etl_hook = RudderStackETLHook(TEST_AIRFLOW_CONN_ID)
+    run_id = etl_hook.start_sync(TEST_ETL_SOURCE_ID)
+    assert run_id == TEST_ETL_SYNC_RUN_ID
+    
+    mock_request.assert_called_once_with(
+        method="POST",
+        url=f"{TEST_BASE_URL}/v2/sources/{TEST_ETL_SOURCE_ID}/start",
+        headers=ANY,
+        timeout=30,
+    )
+
+@patch("airflow.providers.http.hooks.http.HttpHook.get_connection")
+def test_etl_start_sync_invalid_parameters(mock_connection, airflow_connection):
+    mock_connection.return_value = airflow_connection
+    etl_hook = RudderStackETLHook(TEST_AIRFLOW_CONN_ID)
+    with pytest.raises(
+        AirflowException, match="source_id is required to start an ETL sync"
+    ):
+        etl_hook.start_sync("")
+
+
+
+@patch("airflow.providers.http.hooks.http.HttpHook.get_connection")
+def test_etl_poll_sync_invalid_parameters(mock_connection, airflow_connection):
+    mock_connection.return_value = airflow_connection
+    etl_hook = RudderStackETLHook(TEST_AIRFLOW_CONN_ID)
+    with pytest.raises(
+        AirflowException, match="source_id is required to start a sync run"
+    ):
+        etl_hook.poll_sync("", "")
+    
+    with pytest.raises(
+        AirflowException, match="run_id is required to poll status of sync run"
+    ):
+        etl_hook.poll_sync(TEST_ETL_SOURCE_ID, "")
+
+
+@patch("airflow.providers.http.hooks.http.HttpHook.get_connection")
+@patch("requests.request")
+def test_poll_etl_sync_success(mock_request, mock_connection, airflow_connection):
+    mock_request.side_effect = [
+        MagicMock(
+            status_code=200,
+            json=lambda: {
+                "id": TEST_ETL_SYNC_RUN_ID,
+                "status": ETLRunStatus.RUNNING,
+            },
+        ),
+        MagicMock(
+            status_code=200,
+            json=lambda: {
+                "id": TEST_ETL_SYNC_RUN_ID,
+                "status": ETLRunStatus.FINISHED,
+            },
+        ),
+    ]
+    mock_connection.return_value = airflow_connection
+    etl_hook = RudderStackETLHook(
+        connection_id=TEST_AIRFLOW_CONN_ID, poll_interval=0.1
+    )
+    result = etl_hook.poll_sync(TEST_ETL_SOURCE_ID, TEST_ETL_SYNC_RUN_ID)
+    assert mock_request.call_count == 2
+    mock_request.assert_called_with(
+        method="GET",
+        url=f"{TEST_BASE_URL}/v2/sources/{TEST_ETL_SOURCE_ID}/runs/{TEST_ETL_SYNC_RUN_ID}/status",
+        headers=ANY,
+        timeout=30,
+    )
+    assert result == {"id": TEST_ETL_SYNC_RUN_ID, "status": ETLRunStatus.FINISHED}
+
+
+@patch("airflow.providers.http.hooks.http.HttpHook.get_connection")
+@patch("requests.request")
+def test_poll_etl_sync_timeout(mock_request, mock_connection, airflow_connection):
+    mock_request.return_value = MagicMock(
+        status_code=200,
+        json=lambda: {"id": TEST_ETL_SYNC_RUN_ID, "status": ETLRunStatus.RUNNING},
+    )
+    mock_connection.return_value = airflow_connection
+    etl_hook = RudderStackETLHook(
+        connection_id=TEST_AIRFLOW_CONN_ID, poll_interval=0.1, poll_timeout=0.3
+    )
+    with pytest.raises(
+        AirflowException,
+        match=f"Polling for runId: {TEST_ETL_SYNC_RUN_ID} for source: {TEST_ETL_SOURCE_ID} timed out",
+    ):
+        etl_hook.poll_sync(TEST_ETL_SOURCE_ID, TEST_ETL_SYNC_RUN_ID)
     assert mock_request.call_count <= 4
 
 if __name__ == "__main__":
