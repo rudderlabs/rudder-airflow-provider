@@ -166,6 +166,6 @@ class RudderstackETLOperator(baseoperator.BaseOperator):
         etl_run_id = rs_etl_hook.start_sync(self.etl_source_id)
         if self.wait_for_completion:
             self.log.info(
-                f"Poll and wait for etl sync to finish for retl sourceId: {self.etl_source_id}, runId: {etl_run_id}"
+                f"Poll and wait for etl sync to finish for sourceId: {self.etl_source_id}, runId: {etl_run_id}"
             )
             rs_etl_hook.poll_sync(self.etl_source_id, etl_run_id)

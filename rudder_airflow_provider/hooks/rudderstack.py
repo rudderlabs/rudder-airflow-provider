@@ -293,7 +293,7 @@ class RudderStackProfilesHook(BaseRudderStackHook):
                     f"Profile run finished for profile: {profile_id}, runId: {run_id}"
                 )
                 return resp
-            elif run_status == ProfilesRunStatus.FAILED:
+            if run_status == ProfilesRunStatus.FAILED:
                 error_msg = resp.get("error", None)
                 raise AirflowException(
                     f"Profile run for profile: {profile_id}, runId: {run_id} failed with error: {error_msg}"
@@ -373,7 +373,7 @@ class RudderStackETLHook(BaseRudderStackHook):
                     f"Sync run finished for source: {source_id}, runId: {run_id}"
                 )
                 return resp
-            elif run_status == ETLRunStatus.FAILED:
+            if run_status == ETLRunStatus.FAILED:
                 error_msg = resp.get("error", None)
                 raise AirflowException(
                     f"Sync run for source: {source_id}, runId: {run_id} failed with error: {error_msg}"
@@ -387,4 +387,3 @@ class RudderStackETLHook(BaseRudderStackHook):
                     f"Polling for runId: {run_id} for source: {source_id} timed out"
                 )
             time.sleep(self.poll_interval)
-
