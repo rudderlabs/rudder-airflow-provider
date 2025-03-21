@@ -110,6 +110,42 @@ RudderstackProfilesOperator exposes other configurable parameters as well. Mostl
 * parameters: Additional parameters to pass to the profiles run command, as supported by the API endpoint. Default value is `None`.
 
 
+### RudderstackETLOperator
+
+RudderstackETLOperator can be used to trigger ETL sync runs. A simple DAG for triggering ETL sync.
+
+```python
+with DAG(
+    "rudderstack-etl-sample",
+    default_args=default_args,
+    description="A simple tutorial DAG for etl sync.",
+    schedule_interval=timedelta(days=1),
+    start_date=datetime(2021, 1, 1),
+    catchup=False,
+    tags=["rs-etl"],
+) as dag:
+    # etl_source_id is template field
+    rs_operator = RudderstackProfilesOperator(
+        etl_source_id="<etl_source_id>",
+        task_id="<a unique, meaningful id for the airflow task",
+        connection_id="<rudderstack api connection id>",
+    )
+```
+
+Mandatatory parameters for RudderstackETLOperator:
+* etl_source_id: This is the [source id](TBD) for the ETL source.
+* connection_id: The Airflow connection to use for connecting to the Rudderstack API.	Default value is `rudderstack_default`.
+
+RudderstackETLOperator exposes other configurable parameters as well. Mostly default values for them would be recommended.
+
+* request_max_retries: The maximum number of times requests to the RudderStack API should be retried before failng.
+* request_retry_delay: Time (in seconds) to wait between each request retry.
+* request_timeout: Time (in seconds) after which the requests to RudderStack are declared timed out.
+* poll_interval: Time (in seconds) for polling status of triggered job.
+* poll_timeout: Time (in seconds) after which the polling for a triggered job is declared timed out.
+* wait_for_completion: Boolean if execution run should poll and wait till completion of sync. Default value is True.
+
+
 ## Contribute
 
 We would love to see you contribute to this project. Get more information on how to contribute [here](CONTRIBUTING.md).
