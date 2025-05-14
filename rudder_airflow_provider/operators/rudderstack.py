@@ -14,7 +14,7 @@ RUDDERTACK_DEFAULT_CONNECTION_ID = "rudderstack_default"
 
 
 class RudderstackRETLOperator(baseoperator.BaseOperator):
-    template_fields = ("retl_connection_id")
+    template_fields = ("retl_connection_id",)
 
     """
         Rudderstack operator for RETL connnections
@@ -121,7 +121,7 @@ class RudderstackProfilesOperator(baseoperator.BaseOperator):
             rs_profiles_hook.poll_profile_run(self.profile_id, profile_run_id)
 
 class RudderstackETLOperator(baseoperator.BaseOperator):
-    template_fields = ("etl_source_id")
+    template_fields = ("etl_source_id",)
 
     """
         Rudderstack operator for ETL
