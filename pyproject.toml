@@ -1,6 +1,6 @@
 [build-system]
 requires = [
-    "setuptools >= 80.4.0",
+    "setuptools >= 80.0.0",
     "wheel"]
 build-backend = "setuptools.build_meta"
 
@@ -16,11 +16,11 @@ classifiers = [
     "Framework :: Apache Airflow :: Provider",
 ]
 dependencies = [
-    "apache-airflow>=2.10.0",
+    "apache-airflow>=2.10.0<=2.10.5",
     "pytest>=7.3.1",
     "requests>=2.32.3",
     "responses>=0.25.0",
-    "setuptools>=80.4.0",
+    "setuptools>=80.0.0",
     "zipp>=3.19.1",
     "ruff>=0.6.8"
 ]
