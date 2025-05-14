@@ -1,12 +1,12 @@
 [build-system]
 requires = [
-    "setuptools >= 70.0",
+    "setuptools >= 80.4.0",
     "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "rudderstack-airflow-provider"
-version = "2.3.0"
+version = "2.4.0"
 readme = "README.md"
 license = {file = "LICENSE"}
 description = "Apache airflow provider for managing Reverse ETL syncs and Profiles runs in RudderStack."
@@ -16,13 +16,15 @@ classifiers = [
     "Framework :: Apache Airflow :: Provider",
 ]
 dependencies = [
-    "apache-airflow",
-    "pytest",
-    "requests",
-    "responses",
-    "setuptools"
+    "apache-airflow>=2.10.0",
+    "pytest>=7.3.1",
+    "requests>=2.32.3",
+    "responses>=0.25.0",
+    "setuptools>=80.4.0",
+    "zipp>=3.19.1",
+    "ruff>=0.6.8"
 ]
-requires-python = ">= 3.8"
+requires-python = ">= 3.12"
 
 [tool.setuptools.packages.find]
 exclude = ["*test*"]
