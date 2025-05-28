@@ -16,7 +16,7 @@ classifiers = [
     "Framework :: Apache Airflow :: Provider",
 ]
 dependencies = [
-    "apache-airflow>=2.10.0,<=2.10.5",
+    "apache-airflow>=2.10.0,<=3.0.1",
     "pytest>=7.3.1",
     "requests>=2.32.3",
     "responses>=0.25.0",
