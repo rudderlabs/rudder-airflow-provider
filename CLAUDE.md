@@ -127,8 +127,10 @@ The provider uses `HttpHook` as its base, leveraging Airflow's connection manage
 
 The provider defines status constants as class attributes (not true enums):
 - `RETLSyncStatus`: `RUNNING`, `SUCCEEDED`, `FAILED`
-- `ProfilesRunStatus`: `RUNNING`, `FINISHED`, `FAILED`
-- `ETLRunStatus`: `RUNNING`, `FINISHED`, `FAILED`
+- `ProfilesRunStatus`: `RUNNING`, `FINISHED`
+- `ETLRunStatus`: `RUNNING`, `FINISHED`
+
+Note: Profiles and ETL APIs return only `RUNNING` or `FINISHED` status. Failures are indicated by an `error` field in the response when status is `FINISHED`.
 
 ### API Endpoints
 
