@@ -147,7 +147,7 @@ Profiles & ETL:
 - Poll timeout raises `AirflowException` if `poll_timeout` exceeded
 - Failed syncs (status=failed) raise `AirflowException` with error message from API
 
-#### Failure Detection (PRO-4785 Fix)
+#### Failure Detection
 
 The hooks implement comprehensive failure detection to ensure Airflow tasks properly fail when RudderStack operations fail:
 
