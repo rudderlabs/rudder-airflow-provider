@@ -190,6 +190,72 @@ def test_poll_sync_timeout(mock_request, mock_connection, airflow_connection):
     assert mock_request.call_count <= 4
 
 
+@patch("airflow.providers.http.hooks.http.HttpHook.get_connection")
+@patch("requests.request")
+def test_poll_retl_sync_failed(mock_request, mock_connection, airflow_connection):
+    """Test that RETL sync properly raises exception when status is 'failed'"""
+    mock_request.side_effect = [
+        MagicMock(
+            status_code=200,
+            json=lambda: {
+                "id": TEST_RETL_SYNC_RUN_ID,
+                "status": RETLSyncStatus.RUNNING,
+            },
+        ),
+        MagicMock(
+            status_code=200,
+            json=lambda: {
+                "id": TEST_RETL_SYNC_RUN_ID,
+                "status": RETLSyncStatus.FAILED,
+                "error": "Destination connection failed",
+            },
+        ),
+    ]
+    mock_connection.return_value = airflow_connection
+    retl_hook = RudderStackRETLHook(
+        connection_id=TEST_AIRFLOW_CONN_ID, poll_interval=0.1
+    )
+    with pytest.raises(
+        AirflowException,
+        match="Sync for retl connection: test_retl_conn_id, syncId: test_retl_sync_id failed with error: Destination connection failed",
+    ):
+        retl_hook.poll_sync(TEST_RETL_CONN_ID, TEST_RETL_SYNC_RUN_ID)
+    assert mock_request.call_count == 2
+
+
+@patch("airflow.providers.http.hooks.http.HttpHook.get_connection")
+@patch("requests.request")
+def test_poll_retl_sync_failed_no_error_message(mock_request, mock_connection, airflow_connection):
+    """Test that RETL sync raises exception even when error field is None"""
+    mock_request.side_effect = [
+        MagicMock(
+            status_code=200,
+            json=lambda: {
+                "id": TEST_RETL_SYNC_RUN_ID,
+                "status": RETLSyncStatus.RUNNING,
+            },
+        ),
+        MagicMock(
+            status_code=200,
+            json=lambda: {
+                "id": TEST_RETL_SYNC_RUN_ID,
+                "status": RETLSyncStatus.FAILED,
+                "error": None,
+            },
+        ),
+    ]
+    mock_connection.return_value = airflow_connection
+    retl_hook = RudderStackRETLHook(
+        connection_id=TEST_AIRFLOW_CONN_ID, poll_interval=0.1
+    )
+    with pytest.raises(
+        AirflowException,
+        match="Sync for retl connection: test_retl_conn_id, syncId: test_retl_sync_id failed with error: None",
+    ):
+        retl_hook.poll_sync(TEST_RETL_CONN_ID, TEST_RETL_SYNC_RUN_ID)
+    assert mock_request.call_count == 2
+
+
 # RudderStackProfilesHook tests
 @patch("airflow.providers.http.hooks.http.HttpHook.get_connection")
 @patch("requests.request")
@@ -289,6 +355,70 @@ def test_poll_profile_run_timeout(mock_request, mock_connection, airflow_connect
     assert mock_request.call_count <= 4
 
 
+@patch("airflow.providers.http.hooks.http.HttpHook.get_connection")
+@patch("requests.request")
+def test_poll_profile_run_finished_with_error(mock_request, mock_connection, airflow_connection):
+    """Test PRO-4785: Profile run returns 'finished' status but contains error field"""
+    mock_request.side_effect = [
+        MagicMock(
+            status_code=200,
+            json=lambda: {
+                "id": TEST_PROFILE_RUN_ID,
+                "status": ProfilesRunStatus.RUNNING,
+            },
+        ),
+        MagicMock(
+            status_code=200,
+            json=lambda: {
+                "id": TEST_PROFILE_RUN_ID,
+                "status": ProfilesRunStatus.FINISHED,
+                "error": "Configuration error: Invalid warehouse credentials",
+            },
+        ),
+    ]
+    mock_connection.return_value = airflow_connection
+    profiles_hook = RudderStackProfilesHook(
+        connection_id=TEST_AIRFLOW_CONN_ID, poll_interval=0.1
+    )
+    with pytest.raises(
+        AirflowException,
+        match="Profile run for profile: test_profile_id, runId: test_profile_run_id failed with error: Configuration error: Invalid warehouse credentials",
+    ):
+        profiles_hook.poll_profile_run(TEST_PROFILE_ID, TEST_PROFILE_RUN_ID)
+    assert mock_request.call_count == 2
+
+
+@patch("airflow.providers.http.hooks.http.HttpHook.get_connection")
+@patch("requests.request")
+def test_poll_profile_run_finished_no_error(mock_request, mock_connection, airflow_connection):
+    """Test that profile run succeeds when status is 'finished' with no error field"""
+    mock_request.side_effect = [
+        MagicMock(
+            status_code=200,
+            json=lambda: {
+                "id": TEST_PROFILE_RUN_ID,
+                "status": ProfilesRunStatus.RUNNING,
+            },
+        ),
+        MagicMock(
+            status_code=200,
+            json=lambda: {
+                "id": TEST_PROFILE_RUN_ID,
+                "status": ProfilesRunStatus.FINISHED,
+                "error": None,
+            },
+        ),
+    ]
+    mock_connection.return_value = airflow_connection
+    profiles_hook = RudderStackProfilesHook(
+        connection_id=TEST_AIRFLOW_CONN_ID, poll_interval=0.1
+    )
+    result = profiles_hook.poll_profile_run(TEST_PROFILE_ID, TEST_PROFILE_RUN_ID)
+    assert mock_request.call_count == 2
+    assert result["status"] == ProfilesRunStatus.FINISHED
+    assert result["error"] is None
+
+
 #RudderStackETLHook tests
 @patch("airflow.providers.http.hooks.http.HttpHook.get_connection")
 @patch("requests.request")
@@ -384,6 +514,71 @@ def test_poll_etl_sync_timeout(mock_request, mock_connection, airflow_connection
     ):
         etl_hook.poll_sync(TEST_ETL_SOURCE_ID, TEST_ETL_SYNC_RUN_ID)
     assert mock_request.call_count <= 4
+
+
+@patch("airflow.providers.http.hooks.http.HttpHook.get_connection")
+@patch("requests.request")
+def test_poll_etl_sync_finished_with_error(mock_request, mock_connection, airflow_connection):
+    """Test that ETL sync returns 'finished' status but contains error field"""
+    mock_request.side_effect = [
+        MagicMock(
+            status_code=200,
+            json=lambda: {
+                "id": TEST_ETL_SYNC_RUN_ID,
+                "status": ETLRunStatus.RUNNING,
+            },
+        ),
+        MagicMock(
+            status_code=200,
+            json=lambda: {
+                "id": TEST_ETL_SYNC_RUN_ID,
+                "status": ETLRunStatus.FINISHED,
+                "error": "Source authentication failed",
+            },
+        ),
+    ]
+    mock_connection.return_value = airflow_connection
+    etl_hook = RudderStackETLHook(
+        connection_id=TEST_AIRFLOW_CONN_ID, poll_interval=0.1
+    )
+    with pytest.raises(
+        AirflowException,
+        match="Sync run for source: test_etl_src_id, runId: test_etl_sync_id failed with error: Source authentication failed",
+    ):
+        etl_hook.poll_sync(TEST_ETL_SOURCE_ID, TEST_ETL_SYNC_RUN_ID)
+    assert mock_request.call_count == 2
+
+
+@patch("airflow.providers.http.hooks.http.HttpHook.get_connection")
+@patch("requests.request")
+def test_poll_etl_sync_finished_no_error(mock_request, mock_connection, airflow_connection):
+    """Test that ETL sync succeeds when status is 'finished' with no error field"""
+    mock_request.side_effect = [
+        MagicMock(
+            status_code=200,
+            json=lambda: {
+                "id": TEST_ETL_SYNC_RUN_ID,
+                "status": ETLRunStatus.RUNNING,
+            },
+        ),
+        MagicMock(
+            status_code=200,
+            json=lambda: {
+                "id": TEST_ETL_SYNC_RUN_ID,
+                "status": ETLRunStatus.FINISHED,
+                "error": None,
+            },
+        ),
+    ]
+    mock_connection.return_value = airflow_connection
+    etl_hook = RudderStackETLHook(
+        connection_id=TEST_AIRFLOW_CONN_ID, poll_interval=0.1
+    )
+    result = etl_hook.poll_sync(TEST_ETL_SOURCE_ID, TEST_ETL_SYNC_RUN_ID)
+    assert mock_request.call_count == 2
+    assert result["status"] == ETLRunStatus.FINISHED
+    assert result["error"] is None
+
 
 if __name__ == "__main__":
     pytest.main()

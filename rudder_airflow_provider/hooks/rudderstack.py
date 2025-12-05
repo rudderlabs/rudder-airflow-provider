@@ -28,12 +28,10 @@ class RETLSyncType:
 class ProfilesRunStatus:
     RUNNING = "running"
     FINISHED = "finished"
-    FAILED = "failed"
 
 class ETLRunStatus:
     RUNNING = "running"
     FINISHED = "finished"
-    FAILED = "failed"
 
 
 class BaseRudderStackHook(HttpHook):
@@ -289,15 +287,15 @@ class RudderStackProfilesHook(BaseRudderStackHook):
                 f"Polled status for runId: {run_id} for profile: {profile_id}, status: {run_status}"
             )
             if run_status == ProfilesRunStatus.FINISHED:
+                error_msg = resp.get("error", None)
+                if error_msg:
+                    raise AirflowException(
+                        f"Profile run for profile: {profile_id}, runId: {run_id} failed with error: {error_msg}"
+                    )
                 self.log.info(
                     f"Profile run finished for profile: {profile_id}, runId: {run_id}"
                 )
                 return resp
-            if run_status == ProfilesRunStatus.FAILED:
-                error_msg = resp.get("error", None)
-                raise AirflowException(
-                    f"Profile run for profile: {profile_id}, runId: {run_id} failed with error: {error_msg}"
-                )
             if (
                 self.poll_timeout
                 and datetime.datetime.now()
@@ -369,15 +367,15 @@ class RudderStackETLHook(BaseRudderStackHook):
                 f"Polled status for runId: {run_id} for source: {source_id}, status: {run_status}"
             )
             if run_status == ETLRunStatus.FINISHED:
+                error_msg = resp.get("error", None)
+                if error_msg:
+                    raise AirflowException(
+                        f"Sync run for source: {source_id}, runId: {run_id} failed with error: {error_msg}"
+                    )
                 self.log.info(
                     f"Sync run finished for source: {source_id}, runId: {run_id}"
                 )
                 return resp
-            if run_status == ETLRunStatus.FAILED:
-                error_msg = resp.get("error", None)
-                raise AirflowException(
-                    f"Sync run for source: {source_id}, runId: {run_id} failed with error: {error_msg}"
-                )
             if (
                 self.poll_timeout
                 and datetime.datetime.now()
