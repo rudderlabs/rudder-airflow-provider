@@ -1,4 +1,8 @@
-from airflow.models import baseoperator
+try: #Airflow 3
+    from airflow.sdk.bases.operator import BaseOperator
+except ImportError: #Airflow 2
+    from airflow.models.baseoperator import BaseOperator
+    
 from typing import Optional, List
 from rudder_airflow_provider.hooks.rudderstack import (
     RudderStackETLHook,
@@ -13,7 +17,7 @@ from rudder_airflow_provider.hooks.rudderstack import (
 RUDDERTACK_DEFAULT_CONNECTION_ID = "rudderstack_default"
 
 
-class RudderstackRETLOperator(baseoperator.BaseOperator):
+class RudderstackRETLOperator(BaseOperator):
     template_fields = ("retl_connection_id",)
 
     """
@@ -68,7 +72,7 @@ class RudderstackRETLOperator(baseoperator.BaseOperator):
             rs_hook.poll_sync(self.retl_connection_id, sync_id)
 
 
-class RudderstackProfilesOperator(baseoperator.BaseOperator):
+class RudderstackProfilesOperator(BaseOperator):
     template_fields = ("profile_id", "parameters")
 
     """
@@ -120,7 +124,7 @@ class RudderstackProfilesOperator(baseoperator.BaseOperator):
             )
             rs_profiles_hook.poll_profile_run(self.profile_id, profile_run_id)
 
-class RudderstackETLOperator(baseoperator.BaseOperator):
+class RudderstackETLOperator(BaseOperator):
     template_fields = ("etl_source_id",)
 
     """
